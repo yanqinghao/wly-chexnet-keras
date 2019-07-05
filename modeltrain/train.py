@@ -8,14 +8,14 @@ from keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau, CSV
 from callback import MultipleClassAUROC, MultiGPUModelCheckpoint
 from model import ModelFactory
 
-output_dir = "./output"
+output_dir = "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\modeltrain\\output"
 train_dir = (
     "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\cats_and_dogs_small\\train"
 )
 validation_dir = (
     "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\cats_and_dogs_small\\validation"
 )
-output_weights_path = "./output/weight.h5"
+output_weights_path = os.path.join(output_dir, "weight.h5")
 class_names = ["dog", "cat"]
 
 model_factory = ModelFactory()
@@ -84,9 +84,13 @@ else:
 
 optimizer = Adam(lr=0.001)
 if len(class_names) > 2:
-    model_train.compile(optimizer=optimizer, loss="categorical_crossentropy")
+    model_train.compile(
+        optimizer=optimizer, loss="categorical_crossentropy", metrics=["acc"]
+    )
 else:
-    model_train.compile(optimizer=optimizer, loss="binary_crossentropy")
+    model_train.compile(
+        optimizer=optimizer, loss="binary_crossentropy", metrics=["acc"]
+    )
 
 auroc = MultipleClassAUROC(
     sequence=validation_generator,
@@ -101,8 +105,8 @@ callbacks = [
     ReduceLROnPlateau(
         monitor="val_loss", factor=0.1, patience=1, verbose=1, mode="min", min_lr=1e-8
     ),
-    auroc,
-    CSVLogger("./output/training_log.csv"),
+    # auroc,
+    CSVLogger(os.path.join(output_dir, "training_log.csv")),
 ]
 # train_counts, train_pos_counts = get_sample_counts(output_dir, "train", class_names)
 print("** compute class weights from training data **")
