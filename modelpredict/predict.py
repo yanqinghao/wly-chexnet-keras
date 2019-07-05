@@ -3,10 +3,15 @@ from keras.utils import multi_gpu_model
 from keras.preprocessing.image import ImageDataGenerator
 import os
 from model import ModelFactory
+import json
 
 test_dir = "../cats_and_dogs_small/test"
 output_weights_path = "./weight.h5"
 class_names = ["dog", "cat"]
+
+with open("./record.json", "r") as load_f:
+    label_map = json.load(load_f)
+    print(label_map)
 
 model_factory = ModelFactory()
 model = model_factory.get_model(
@@ -27,4 +32,4 @@ if gpus > 1:
     # FIXME: currently (Keras 2.1.2) checkpoint doesn't work with multi_gpu_model
 else:
     model_train = model
-result = model_train.predict_generator(test_generator)
+result = model_train.predict_generator(test_generator, len(test_generator))

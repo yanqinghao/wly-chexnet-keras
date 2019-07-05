@@ -94,7 +94,9 @@ class ModelFactory:
         predictions = (
             Dense(len(class_names), activation="softmax", name="predictions")(x)
             if len(class_names) > 2
-            else Dense(len(class_names), activation="sigmoid", name="predictions")(x)
+            else Dense(len(class_names) - 1, activation="sigmoid", name="predictions")(
+                x
+            )
         )
         model = Model(inputs=img_input, outputs=predictions)
 

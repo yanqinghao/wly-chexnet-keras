@@ -7,6 +7,7 @@ from utility import get_sample_counts
 from keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau, CSVLogger
 from callback import MultipleClassAUROC, MultiGPUModelCheckpoint
 from model import ModelFactory
+import json
 
 output_dir = "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\modeltrain\\output"
 train_dir = (
@@ -45,7 +46,10 @@ train_generator = (
         train_dir, target_size=(224, 224), batch_size=32, class_mode="binary"
     )
 )
-
+label_map = train_generator.class_indices
+with open("./label_map.json", "w") as f:
+    json.dump(label_map, f)
+    print("save label map...")
 validation_datagen = ImageDataGenerator(
     # samplewise_center=True,
     # samplewise_std_normalization=True,
@@ -103,7 +107,7 @@ callbacks = [
     checkpoint,
     TensorBoard(log_dir=os.path.join(output_dir, "logs"), batch_size=32),
     ReduceLROnPlateau(
-        monitor="val_loss", factor=0.1, patience=1, verbose=1, mode="min", min_lr=1e-8
+        monitor="val_loss", factor=0.1, patience=5, verbose=1, mode="min", min_lr=1e-8
     ),
     # auroc,
     CSVLogger(os.path.join(output_dir, "training_log.csv")),
