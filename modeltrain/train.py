@@ -19,6 +19,8 @@ outputWeightsPath = os.path.join(outputDir, "weight.h5")
 imageSize = 224
 batchSize = 32
 classNum = len(os.listdir(trainDir))
+Epoch = 100
+learningRate = 0.01
 
 models = ModelFactory()
 
@@ -79,7 +81,9 @@ validationGenerator = (
     )
 )
 
-model = models.get_model(classNames)
+model = models.get_model(
+    model_name="DenseNet121", class_names=classNames, input_shape=(224, 224, 3)
+)
 print(model.summary())
 print(len(model.layers))
 
@@ -95,7 +99,7 @@ else:
         outputWeightsPath, save_weights_only=True, save_best_only=True, verbose=1
     )
 
-optimizer = Adam(lr=0.001)
+optimizer = Adam(lr=learningRate)
 if len(classNames) > 2:
     model_train.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["acc"]
@@ -117,7 +121,7 @@ callbacks = [
 history = model_train.fit_generator(
     generator=trainGenerator,
     steps_per_epoch=len(trainGenerator),
-    epochs=100,
+    epochs=Epoch,
     validation_data=validationGenerator,
     validation_steps=len(validationGenerator),
     callbacks=callbacks,
