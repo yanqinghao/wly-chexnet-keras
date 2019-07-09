@@ -5,3 +5,10 @@ dogs-vs-cats
 cats_and_dogs_small
 modeltrain/output
 cats_and_dogs_small.zip
+a
+b
+a_result
+b_result
+X-ray-data.zip
+modelpredict/weight.h5
+*.h5

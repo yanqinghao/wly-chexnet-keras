@@ -9,22 +9,20 @@ from callback import MultipleClassAUROC, MultiGPUModelCheckpoint
 from model import ModelFactory
 import json
 
-output_dir = "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\modeltrain\\output"
-train_dir = (
-    "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\cats_and_dogs_small\\train"
-)
-validation_dir = (
+outputDir = "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\modeltrain\\output"
+trainDir = "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\cats_and_dogs_small\\train"
+validationDir = (
     "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\cats_and_dogs_small\\validation"
 )
-output_weights_path = os.path.join(output_dir, "weight.h5")
-class_names = ["dog", "cat"]
+outputWeightsPath = os.path.join(outputDir, "weight.h5")
 
-model_factory = ModelFactory()
-model = model_factory.get_model(class_names)
-print(model.summary())
-print(len(model.layers))
+imageSize = 224
+batchSize = 32
+classNum = len(os.listdir(trainDir))
 
-train_datagen = ImageDataGenerator(
+models = ModelFactory()
+
+trainDatagen = ImageDataGenerator(
     samplewise_center=True,
     samplewise_std_normalization=True,
     horizontal_flip=True,
@@ -37,57 +35,68 @@ train_datagen = ImageDataGenerator(
     zoom_range=0.15,
     rescale=1.0 / 255,
 )
-train_generator = (
-    train_datagen.flow_from_directory(
-        train_dir, target_size=(224, 224), batch_size=32, class_mode="categorical"
+trainGenerator = (
+    trainDatagen.flow_from_directory(
+        trainDir,
+        target_size=(imageSize, imageSize),
+        batch_size=batchSize,
+        class_mode="categorical",
     )
-    if len(class_names) > 2
-    else train_datagen.flow_from_directory(
-        train_dir, target_size=(224, 224), batch_size=32, class_mode="binary"
+    if classNum > 2
+    else trainDatagen.flow_from_directory(
+        trainDir,
+        target_size=(imageSize, imageSize),
+        batch_size=batchSize,
+        class_mode="binary",
     )
 )
-label_map = train_generator.class_indices
-with open("./label_map.json", "w") as f:
-    json.dump(label_map, f)
+
+labelMap = trainGenerator.class_indices
+classNames = labelMap.keys()
+with open(os.path.join(outputDir, "label_map.json"), "w") as f:
+    json.dump(labelMap, f)
     print("save label map...")
-validation_datagen = ImageDataGenerator(
-    # samplewise_center=True,
-    # samplewise_std_normalization=True,
-    # horizontal_flip=True,
-    # vertical_flip=False,
-    # height_shift_range=0.05,
-    # width_shift_range=0.1,
-    # rotation_range=5,
-    # shear_range=0.1,
-    # fill_mode="reflect",
-    # zoom_range=0.15,
-    rescale=1.0
-    / 255
-)
-validation_generator = (
-    validation_datagen.flow_from_directory(
-        validation_dir, target_size=(224, 224), batch_size=32, class_mode="categorical"
+
+train_counts, train_pos_counts = get_sample_counts(trainDir, "train", classNames)
+print("** compute class weights from training data **")
+classWeights = get_class_weights(train_counts, train_pos_counts, multiply=1)
+print("** class_weights **")
+
+validationDatagen = ImageDataGenerator(rescale=1.0 / 255)
+validationGenerator = (
+    validationDatagen.flow_from_directory(
+        validationDir,
+        target_size=(imageSize, imageSize),
+        batch_size=batchSize,
+        class_mode="categorical",
     )
-    if len(class_names) > 2
-    else validation_datagen.flow_from_directory(
-        validation_dir, target_size=(224, 224), batch_size=32, class_mode="binary"
+    if classNum > 2
+    else validationDatagen.flow_from_directory(
+        validationDir,
+        target_size=(imageSize, imageSize),
+        batch_size=batchSize,
+        class_mode="binary",
     )
 )
+
+model = models.get_model(classNames)
+print(model.summary())
+print(len(model.layers))
 
 gpus = len(os.getenv("CUDA_VISIBLE_DEVICES", "1").split(","))
 if gpus > 1:
     print(f"** multi_gpu_model is used! gpus={gpus} **")
     model_train = multi_gpu_model(model, gpus)
     # FIXME: currently (Keras 2.1.2) checkpoint doesn't work with multi_gpu_model
-    checkpoint = MultiGPUModelCheckpoint(filepath=output_weights_path, base_model=model)
+    checkpoint = MultiGPUModelCheckpoint(filepath=outputWeightsPath, base_model=model)
 else:
     model_train = model
     checkpoint = ModelCheckpoint(
-        output_weights_path, save_weights_only=True, save_best_only=True, verbose=1
+        outputWeightsPath, save_weights_only=True, save_best_only=True, verbose=1
     )
 
 optimizer = Adam(lr=0.001)
-if len(class_names) > 2:
+if len(classNames) > 2:
     model_train.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["acc"]
     )
@@ -96,34 +105,23 @@ else:
         optimizer=optimizer, loss="binary_crossentropy", metrics=["acc"]
     )
 
-auroc = MultipleClassAUROC(
-    sequence=validation_generator,
-    class_names=class_names,
-    weights_path=output_weights_path,
-    stats={},
-    workers=8,
-)
 callbacks = [
     checkpoint,
-    TensorBoard(log_dir=os.path.join(output_dir, "logs"), batch_size=32),
+    # TensorBoard(log_dir=os.path.join(outputDir, "logs"), batch_size=32),
     ReduceLROnPlateau(
-        monitor="val_loss", factor=0.1, patience=5, verbose=1, mode="min", min_lr=1e-8
+        monitor="val_acc", factor=0.2, patience=5, verbose=1, mode="max", min_lr=1e-8
     ),
-    # auroc,
-    CSVLogger(os.path.join(output_dir, "training_log.csv")),
+    CSVLogger(os.path.join(outputDir, "training_log.csv")),
 ]
-# train_counts, train_pos_counts = get_sample_counts(output_dir, "train", class_names)
-print("** compute class weights from training data **")
-# class_weights = get_class_weights(train_counts, train_pos_counts, multiply=1)
-print("** class_weights **")
+
 history = model_train.fit_generator(
-    generator=train_generator,
-    steps_per_epoch=len(train_generator) // 32,
+    generator=trainGenerator,
+    steps_per_epoch=len(trainGenerator),
     epochs=100,
-    validation_data=validation_generator,
-    validation_steps=len(validation_generator) // 32,
+    validation_data=validationGenerator,
+    validation_steps=len(validationGenerator),
     callbacks=callbacks,
-    # class_weight=class_weights,
+    class_weight=classWeights,
     workers=8,
     shuffle=False,
 )

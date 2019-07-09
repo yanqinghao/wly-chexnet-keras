@@ -459,6 +459,9 @@ class DatasetGenerator(Dataset):
 
 
 if __name__ == "__main__":
-    ds = DatasetGenerator("./data/", "./result/")
+    ds = DatasetGenerator(
+        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\b",
+        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\b_result",
+    )
     for i, d in enumerate(ds):
         print(i + 1, "images done.")
