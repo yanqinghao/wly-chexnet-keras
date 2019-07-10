@@ -20,7 +20,8 @@ imageSize = 224
 batchSize = 32
 classNum = len(os.listdir(trainDir))
 Epoch = 100
-learningRate = 0.01
+learningRate = 0.001
+inputShape = (224, 224, 3)
 
 models = ModelFactory()
 
@@ -54,7 +55,7 @@ trainGenerator = (
 )
 
 labelMap = trainGenerator.class_indices
-classNames = labelMap.keys()
+classNames = list(labelMap.keys())
 with open(os.path.join(outputDir, "label_map.json"), "w") as f:
     json.dump(labelMap, f)
     print("save label map...")
@@ -82,7 +83,7 @@ validationGenerator = (
 )
 
 model = models.get_model(
-    model_name="DenseNet121", class_names=classNames, input_shape=(224, 224, 3)
+    model_name="DenseNet121", class_names=classNames, input_shape=inputShape
 )
 print(model.summary())
 print(len(model.layers))
@@ -96,7 +97,11 @@ if gpus > 1:
 else:
     model_train = model
     checkpoint = ModelCheckpoint(
-        outputWeightsPath, save_weights_only=True, save_best_only=True, verbose=1
+        outputWeightsPath,
+        monitor="val_acc",
+        save_weights_only=True,
+        save_best_only=True,
+        verbose=1,
     )
 
 optimizer = Adam(lr=learningRate)
@@ -118,15 +123,28 @@ callbacks = [
     CSVLogger(os.path.join(outputDir, "training_log.csv")),
 ]
 
-history = model_train.fit_generator(
-    generator=trainGenerator,
-    steps_per_epoch=len(trainGenerator),
-    epochs=Epoch,
-    validation_data=validationGenerator,
-    validation_steps=len(validationGenerator),
-    callbacks=callbacks,
-    class_weight=classWeights,
-    workers=8,
-    shuffle=False,
+history = (
+    model_train.fit_generator(
+        generator=trainGenerator,
+        steps_per_epoch=len(trainGenerator),
+        epochs=Epoch,
+        validation_data=validationGenerator,
+        validation_steps=len(validationGenerator),
+        callbacks=callbacks,
+        # class_weight=classWeights,
+        workers=8,
+        shuffle=False,
+    )
+    if len(classNames) > 2
+    else model_train.fit_generator(
+        generator=trainGenerator,
+        steps_per_epoch=len(trainGenerator),
+        epochs=Epoch,
+        validation_data=validationGenerator,
+        validation_steps=len(validationGenerator),
+        callbacks=callbacks,
+        workers=8,
+        shuffle=False,
+    )
 )
 
