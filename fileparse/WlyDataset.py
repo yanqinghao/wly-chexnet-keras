@@ -211,7 +211,7 @@ class DatasetGenerator(Dataset):
             #     return errorLabel, errorLabel
         if type(imageData) == Image.Image:
             print("save image ", index)
-            imageData.save("{}/t{}.png".format(self.outputPath, index))
+            imageData.save(os.path.join(self.outputPath, imagePath))
         # except Exception as e:
         #     log.error("读取二级制文件出现异常={}".format(e))
         # return [0],[0]
