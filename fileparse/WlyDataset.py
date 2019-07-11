@@ -216,16 +216,16 @@ class DatasetGenerator(Dataset):
                     len(os.path.split(self.pathImageDirectory)) - 1 :
                 ]
             )
-            print(
-                os.path.join(
-                    self.outputPath,
-                    os.path.split(imagePath)[
-                        len(os.path.split(self.pathImageDirectory)) - 1 :
-                    ],
-                )
-                + ".png"
-            )
-            imageData.save(os.path.join(self.outputPath, imagePath) + ".png")
+
+            subpath = os.path.split(imagePath)[
+                len(os.path.split(self.pathImageDirectory)) - 1 :
+            ]
+            print(os.path.join(self.outputPath, *subpath) + ".png")
+            pngpath = os.path.join(self.outputPath, *subpath) + ".png"
+            s = os.path.split(pngpath)[:-1]
+            if os.path.exists(os.path.join(*s)):
+                os.makedirs(os.path.join(*s))
+            imageData.save(os.path.join(self.outputPath, *subpath) + ".png")
         # except Exception as e:
         #     log.error("读取二级制文件出现异常={}".format(e))
         # return [0],[0]
