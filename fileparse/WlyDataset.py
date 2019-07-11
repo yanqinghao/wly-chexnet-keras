@@ -48,7 +48,7 @@ class DatasetGenerator(Dataset):
         pathDatasetFile=None,
         transform=None,
     ):
-
+        self.pathImageDirectory = pathImageDirectory
         self.listImagePaths = get_all_files(pathImageDirectory)
         print(len(self.listImagePaths), " images to convert.")
         self.listImageLabels = []
@@ -211,7 +211,21 @@ class DatasetGenerator(Dataset):
             #     return errorLabel, errorLabel
         if type(imageData) == Image.Image:
             print("save image ", index)
-            imageData.save(os.path.join(self.outputPath, imagePath))
+            print(
+                os.path.split(imagePath)[
+                    len(os.path.split(self.pathImageDirectory)) - 1 :
+                ]
+            )
+            print(
+                os.path.join(
+                    self.outputPath,
+                    os.path.split(imagePath)[
+                        len(os.path.split(self.pathImageDirectory)) - 1 :
+                    ],
+                )
+                + ".png"
+            )
+            imageData.save(os.path.join(self.outputPath, imagePath) + ".png")
         # except Exception as e:
         #     log.error("读取二级制文件出现异常={}".format(e))
         # return [0],[0]
@@ -460,8 +474,8 @@ class DatasetGenerator(Dataset):
 
 if __name__ == "__main__":
     ds = DatasetGenerator(
-        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\b",
-        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\b_result",
+        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\data",
+        "C:\\Users\\yanqing.yqh\\code\\wly-chexnet-keras\\fileparse\\data_result",
     )
     for i, d in enumerate(ds):
         print(i + 1, "images done.")
