@@ -12,3 +12,17 @@ b_result
 X-ray-data.zip
 modelpredict/weight.h5
 *.h5
+fileparse/data_result/DRdicom/YANYEKUI/W1/Y1.png
+fileparse/data_result/3963.20197383447.1.3.46.670589.30.1.6.1.963335239520.1562139583937.3.083443644364.9216.png
+fileparse/data_result/Y1.png
+fileparse/data_result/Y2.png
+fileparse/data_result/DRdicom/HEZENGZHEN/W1/Y1.png
+fileparse/data_result/DRdicom/LIUQIUHUA/W1/Y1.png
+fileparse/data_result/DRdicom/LIXIAOJIE/W1/Y1.png
+fileparse/data_result/DRdicom/RENZHAOQUAN/W1/Y1.png
+fileparse/data_result/DRdicom/RENZHAOQUAN/W1/Y2.png
+fileparse/data_result/DRdicom/WANGCHUNZHANG/W1/Y1.png
+fileparse/data_result/DRdicom/WANGCHUNZHANG/W1/Y2.png
+fileparse/data_result/DRdicom/YANYEKUI/W1/Y2.png
+fileparse/data_result/DRdicom/ZHANGANJIN/W1/Y1.png
+fileparse/data_result/DRdicom/ZHANGANJIN/W1/Y2.png

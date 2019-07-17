@@ -211,21 +211,13 @@ class DatasetGenerator(Dataset):
             #     return errorLabel, errorLabel
         if type(imageData) == Image.Image:
             print("save image ", index)
-            print(
-                os.path.split(imagePath)[
-                    len(os.path.split(self.pathImageDirectory)) - 1 :
-                ]
-            )
-
-            subpath = os.path.split(imagePath)[
-                len(os.path.split(self.pathImageDirectory)) - 1 :
-            ]
-            print(os.path.join(self.outputPath, *subpath) + ".png")
-            pngpath = os.path.join(self.outputPath, *subpath) + ".png"
-            s = os.path.split(pngpath)[:-1]
-            if os.path.exists(os.path.join(*s)):
-                os.makedirs(os.path.join(*s))
-            imageData.save(os.path.join(self.outputPath, *subpath) + ".png")
+            filepath = imagePath.replace(self.pathImageDirectory,"")
+            print(self.outputPath + filepath + ".png")
+            pngpath = self.outputPath + filepath + ".png"
+            pngdir = os.path.split(pngpath)
+            if not os.path.exists(pngdir[0]):
+                os.makedirs(pngdir[0])
+            imageData.save(pngpath)
         # except Exception as e:
         #     log.error("读取二级制文件出现异常={}".format(e))
         # return [0],[0]

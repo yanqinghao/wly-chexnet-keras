@@ -13,7 +13,7 @@ class MultipleClassAUROC(Callback):
     Monitor mean AUROC and update model
     """
     def __init__(self, sequence, class_names, weights_path, stats=None, workers=1):
-        super(Callback, self).__init__()
+        super(MultipleClassAUROC, self).__init__()
         self.sequence = sequence
         self.workers = workers
         self.class_names = class_names
@@ -102,7 +102,7 @@ class MultiGPUModelCheckpoint(Callback):
     def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
                  save_best_only=False, save_weights_only=False,
                  mode='auto', period=1):
-        super(Callback, self).__init__()
+        super(MultiGPUModelCheckpoint, self).__init__()
         self.base_model = base_model
         self.monitor = monitor
         self.verbose = verbose
