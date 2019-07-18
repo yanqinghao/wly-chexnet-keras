@@ -20,14 +20,12 @@ class StreamDemo(Stream):
         args = context.args
         # 查看上一节点发送的 args.inputData1 数据
         print(args.inputData1)
-        print(args.inputData1["data"])
         envparam = HasArguments.getArgListFromEnv()
         userId = envparam[envparam.index("--stream-user-id") + 1]
         appId = envparam[envparam.index("--stream-app-id") + 1]
         host = envparam[envparam.index("--stream-host") + 1]
         port = 30007
         templateId = 4406
-        ossPath = args.inputData1["data"]
 
         urlStatus = "http://{}:{}/app/status".format(host, port)
         dataStatus = {"id": templateId}
@@ -35,6 +33,7 @@ class StreamDemo(Stream):
         urlRun = "http://{}:{}/app/run".format(host, port)
 
         if args.inputData1["type"] == "start":
+            ossPath = args.inputData1["data"]
             dataRun = {
                 "id": "4406",
                 "nodeId": "3e2f49509f0511e9a1e9b3f60be454b7",
