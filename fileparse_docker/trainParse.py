@@ -6,6 +6,7 @@ from suanpan.docker.arguments import Folder
 from suanpan.stream import Handler as h
 from suanpan.stream import Stream
 from suanpan.stream.arguments import String, Json
+from suanpan.interfaces import HasArguments
 import os
 import pdb
 import sys
@@ -26,6 +27,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mat_img
 from torch.utils.data import DataLoader
 from suanpan.storage import storage
+import base64
+import json
 
 
 def get_all_files(dir):
@@ -53,6 +56,9 @@ class DatasetGenerator(Dataset):
         outputPath="./",
         pathDatasetFile=None,
         transform=None,
+        userId=None,
+        appId=None,
+        programId=None,
     ):
         self.pathImageDirectory = pathImageDirectory
         if os.path.isdir(self.pathImageDirectory):
@@ -65,188 +71,50 @@ class DatasetGenerator(Dataset):
         self.listImageLabels = []
         self.transform = transform
         self.outputPath = outputPath
-        # if not (pathImageDirectory == None or pathDatasetFile == None):
-        #     # ---- Open file, get image paths and labels
-        #     fileDescriptor = open(pathDatasetFile, "r")
-        #     # ---- get into the loop
-        #     line = True
-        #     while line:
-        #         line = fileDescriptor.readline()
-        #         # --- if not empty
-        #         if line:
-        #             lineItems = line.split()
-        #             imagePath = os.path.join(pathImageDirectory, lineItems[0])
-        #             imageLabel = lineItems[1:]
-        #             imageLabel = [int(i) for i in imageLabel]
-        #             self.listImagePaths.append(imagePath)
-        #             self.listImageLabels.append(imageLabel)
-        #
-        #     fileDescriptor.close()
-
-        self.SERIESES = [
-            "W胸部后前位",
-            "胸部正位",
-            "胸部后前位",
-            "Chest",
-            "pa",
-            "DX-胸部",
-            "床边胸片正位",
-            "V04_0014",
-            "TChestap.",
-            "ap",
-            "WChestp.a",
-            "W033Chestp.a.",
-        ]
-
-    # add by rdw 2019-4-2
-    def __caculateClassStatic(self):
-        nClass = len(self.listImageLabels[0])
-        self.listLabelSum = np.zeros([nClass])
-        for i in range(len(self.listImageLabels)):
-            for j in range(nClass):
-                self.listLabelSum[j] = self.listLabelSum[j] + self.listImageLabels[i][j]
-        return self.listLabelSum
-
-    # add by rdw 2019-4-2
-    def getClassStatic(self):
-        if not hasattr(self, "listLabelSum"):
-            self.__caculateClassStatic()
-        return self.listLabelSum
-
-    # open file
-    def transformImageData(self, imageData):
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return imageData
-
-    def getImageDataFromFile(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-
-            if sucess == False:
-                return None
-        except:
-            # log.error("DatasetGenerator.getImageDataFromFile?error=读取二级制文件出现异常")
-            return None
-        return imageData
-
-    # 返回PIL格式，１　解析　　２　进行图像转换
-    def openFile(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-
-            if sucess == False:
-                return None
-        except Exception as e:
-            # log.error("读取二级制文件出现异常={}".format(e))
-            return None
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return imageData
-
-    # 返回PIL格式，１　解析　　２　进行图像转换
-    def openFileReturnFlag(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-            if sucess == False:
-                return False, imageData
-        except Exception as e:
-            # log.error("读取二级制文件出现异常={}".format(e))
-            return False, imageData
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return True, imageData
-
-    # 将所有的文件格式修改为png格式
-    def convert2Png(self, pngFileBasePath, pngLabelFile, pngNumber=None):
-        pngFile = open(pngLabelFile, "a")
-        for i in range(len(self.listImagePaths)):
-            path = self.listImagePaths[i]
-            img_data = self.openFile(path)
-            if None == img_data:
-                print("解析dicom文件错误, error file continue .... ....")
-                continue
-            file_name = os.path.basename(path)
-            print("{}-{}".format(i, file_name))
-            labels = ""
-            for j in range(len(self.listImageLabels[i])):
-                labels = labels + " {}".format(self.listImageLabels[i][j])
-
-            if pngNumber == None:
-                png_file_name = file_name + ".png"
-                png_file_path = os.path.join(pngFileBasePath, png_file_name)
-                img_data.save(png_file_path, "png")
-                label_cell = png_file_name + labels + "\r\n"
-                pngFile.write(label_cell)
-            else:
-                for num in range(pngNumber):
-                    png_file_name = "{}-{}.png".format(file_name, num)
-                    png_file_path = os.path.join(pngFileBasePath, png_file_name)
-                    img_data.save(png_file_path, "png")
-                    label_cell = png_file_name + labels + "\r\n"
-                    pngFile.write(label_cell)
-                    img_data = self.openFile(path)
-        pngFile.close()
+        self.userId = userId
+        self.appId = appId
+        self.programId = programId
 
     def __getitem__(self, index):
-        # errorLabel = torch.FloatTensor(np.zeros([100]))
         print("********start********" + str(index))
         imagePath = self.listImagePaths[index]
-        sucess = False
-        # imageLabel = torch.FloatTensor(self.listImageLabels[index])
-        try:
-            if imagePath.find("png") != -1:
-                sucess, imageData = self.__read_png(imagePath)
-            elif imagePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(imagePath)
-            else:
-                print("no name")
-                sucess, imageData = self.__read_dicom(imagePath)
-        except:
-            print("except")
-            pass
-            # if sucess == False:
-            #     #log.error("返回二级制文件错误,success={}".format(sucess))
-            #     return errorLabel, errorLabel
-        if type(imageData) == Image.Image:
-            print("save image ", index)
-            if os.path.isdir(self.pathImageDirectory):
-                filepath = imagePath.replace(self.pathImageDirectory, "")
-            else:
-                # print(os.path.split(self.pathImageDirectory))
-                filepath = os.path.split(self.pathImageDirectory)[1]
-            print(self.outputPath + filepath + ".png")
-            pngpath = self.outputPath + filepath + ".png"
-            pngdir = os.path.split(pngpath)
-            if not os.path.exists(pngdir[0]):
-                os.makedirs(pngdir[0])
-            print(pngdir[0])
-            imageData.save(pngpath)
-        # except Exception as e:
-        #     log.error("读取二级制文件出现异常={}".format(e))
-        # return [0],[0]
+        filePng = "studio/{}/{}/{}/images/{}.png".format(
+            self.userId, self.appId, self.programId, imagePath[7:]
+        )
+        filecheck = storage.isFile(objectName=filePng)
+        if not filecheck:
+            try:
+                if imagePath.find("png") != -1:
+                    sucess, imageData = self.__read_png(imagePath)
+                elif imagePath.find("dcm") != -1:
+                    sucess, imageData = self.__read_dicom(imagePath)
+                else:
+                    print("no name")
+                    sucess, imageData = self.__read_dicom(imagePath)
+            except:
+                print("except")
+                pass
+            if type(imageData) == Image.Image:
+                print("save image ", index)
+                if os.path.isdir(self.pathImageDirectory):
+                    print(imagePath[6:])
+                    filepath = imagePath[6:]
+                else:
+                    filepath = os.path.split(self.pathImageDirectory)[1]
+                print(self.outputPath + filepath + ".png")
+                pngpath = self.outputPath + filepath + ".png"
+                pngdir = os.path.split(pngpath)
+                if not os.path.exists(pngdir[0]):
+                    os.makedirs(pngdir[0])
+                print(pngdir[0])
+                imageData.save(pngpath)
+                filePng = "studio/{}/{}/{}/images/{}.png".format(
+                    self.userId, self.appId, self.programId, imagePath[7:]
+                )
+                storage.uploadFile(objectName=filePng, filePath=pngpath)
 
-        # if self.transform != None:
-        #     imageData = self.transform(imageData)
+        return None
 
-        return imageData, []
-
-    # --------------------------------------------------------------------------------
     def __len__(self):
         return len(self.listImagePaths)
 
@@ -308,20 +176,6 @@ class DatasetGenerator(Dataset):
         if BeRightModality == False:
             # log.error('DatasetGenerator.__read_dicom?error=当前设备类型错误{}'.format(modality))
             return False, "DX DR CR类型的图像Modality={}".format(modality)
-
-        # 当ｓｅｒｉｅｓ　ｄｅｓ
-        """
-        BeRightProtocol = False
-        sdes = dcmFile.SeriesDescription
-        for ni in range(len(self.SERIESES)):
-            sdes = sdes.replace(' ','')
-            if sdes == self.SERIESES[ni]:
-                BeRightProtocol = True
-                break
-        if BeRightProtocol == False:
-            #log.error('DatasetGenerator.__read_dicom?error=当前检查部位错误sdes={}'.format(sdes))
-            return False, None
-        """
 
         needWL = False
         if hasattr(dcmFile, "BitsAllocated"):
@@ -433,16 +287,6 @@ class DatasetGenerator(Dataset):
         )
 
         lut = self.__generate_lut(invert)
-        # maxDen = len(lut)
-        # data[data > maxDen - 1] = maxDen - 1
-        # data[data < 0] = 0
-
-        # @1
-        # des_data = [lut[data[i][j]] for i in range(data.shape[0]) for j in range(data.shape[1])]
-        # des_data = np.array(des_data)
-        # des_data = des_data.reshape([data.shape[0], data.shape[1]])
-        # @2
-        # des_data = cv2.LUT(data,lut)
 
         for i in range(data.shape[0]):
             for j in range(data.shape[1]):
@@ -494,40 +338,51 @@ class StreamDemo(Stream):
         args = context.args
         # 查看上一节点发送的 args.inputData1 数据
         print(args.inputData1)
-        # "studio/shanglu/4399/" +
-
+        envparam = HasArguments.getArgListFromEnv()
+        userId = envparam[envparam.index("--stream-user-id") + 1]
+        appId = envparam[envparam.index("--stream-app-id") + 1]
+        programId = args.inputData1["id"]
+        filePathDcom = "studio/{}/{}/{}/dcom".format(userId, appId, programId)
+        osslogFile = "studio/{}/{}/{}/parsinglog.json".format(userId, appId, programId)
         # 自定义代码
+        localDcom = "./dcom"
+        localPng = "./images"
+        logFile = "./parsinglog.json"
 
-        if args.inputData1["type"]=="start":
-            file_path = (
-            "studio/100090/4438/"
-            + str(args.inputData1["programId"])
-            + "/predict/"
-            + args.inputData1["fileName"]
-            )
-            print(file_path)
-            # storage.OssStorage.downloadFile(objectName = file_path, filePath = "./Y2")
-            storage.downloadFile(objectName=file_path, filePath="./"+args.inputData1["fileName"])
-            # if args.inputData1["type"] == "start":
-            print(file_path)
-            ds = DatasetGenerator("./"+args.inputData1["fileName"], "./")
-            for i, d in enumerate(ds):
-                print(i + 1, "images done.")
-            file_path_png = (
-                "studio/100090/4438/"
-                + str(args.inputData1["programId"])
-                + "/predict/" + args.inputData1["fileName"]+"/"
-                + args.inputData1["fileName"] + ".png"
-            )
-            storage.uploadFile(objectName=file_path_png, filePath="./"+args.inputData1["fileName"]+".png")
-            os.remove("./"+args.inputData1["fileName"]+".png")
-            os.remove("./"+args.inputData1["fileName"])
-        elif args.inputData1["type"]=="status":
-            pass
+        if storage.isFile(objectName=osslogFile):
+            storage.removeFile(fileName=osslogFile)
 
+        if os.path.exists(localDcom):
+            shutil.rmtree(localDcom)
+        if os.path.exists(localPng):
+            shutil.rmtree(localPng)
+
+        storage.downloadFolder(folderName=filePathDcom, folderPath=localDcom)
+        ds = DatasetGenerator(
+            pathImageDirectory=localDcom,
+            outputPath=localPng,
+            userId=userId,
+            appId=appId,
+            programId=programId,
+        )
+
+        fileLen = len(ds.listImagePaths)
+        with open(logFile, "w") as f:
+            json.dump({"now": 0, "fileNum": fileLen}, f)
+
+        storage.uploadFile(objectName=osslogFile, filePath=logFile)
+        for i, d in enumerate(ds):
+            with open(logFile, "w") as f:
+                json.dump({"now": i + 1, "fileNum": fileLen}, f)
+
+            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            print(i + 1, "images done.")
+
+        if os.path.exists(localPng):
+            shutil.rmtree(localPng)
+        if os.path.exists(localDcom):
+            shutil.rmtree(localDcom)
         return args.inputData1
-        # 将 args.inputData1 作为输出发送给下一节点
-        # return args.outputData1
 
 
 if __name__ == "__main__":

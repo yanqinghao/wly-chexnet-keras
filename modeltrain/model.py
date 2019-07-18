@@ -2,7 +2,8 @@ import importlib
 from keras.layers import Input
 from keras.layers.core import Dense
 from keras.models import Model
-
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout
+from keras import layers
 
 class ModelFactory:
     """
@@ -91,6 +92,13 @@ class ModelFactory:
             pooling="avg",
         )
         x = base_model.output
+
+        # x = Conv2D(64, (3, 3), padding='same', activation='relu')(img_input)
+        # x = MaxPooling2D((3, 3), padding='same')(x)
+        # x = Dropout(0.5)(x)
+        # x = layers.GlobalAveragePooling2D()(x)
+
+
         predictions = (
             Dense(len(class_names), activation="softmax", name="predictions")(x)
             if len(class_names) > 2

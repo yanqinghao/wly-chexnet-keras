@@ -9,7 +9,7 @@ def get_class_weights(total_counts, class_positive_counts, multiply):
     total_counts - int
     class_positive_counts - dict of int, ex: {"Effusion": 300, "Infiltration": 500 ...}
     multiply - int, positve weighting multiply
-    use_class_balancing - boolean 
+    use_class_balancing - boolean
 
     Returns:
     class_weight - dict of dict, ex: {"Effusion": { 0: 0.01, 1: 0.99 }, ... }

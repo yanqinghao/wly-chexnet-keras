@@ -2,9 +2,7 @@ import importlib
 from keras.layers import Input
 from keras.layers.core import Dense
 from keras.models import Model
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout
-from keras import layers
-import time
+
 
 class ModelFactory:
     """
@@ -67,8 +65,7 @@ class ModelFactory:
         weights_path=None,
         input_shape=None,
     ):
-        print("*******************bulid model*********************")
-        print(time.ctime)
+
         if use_base_weights is True:
             base_weights = "imagenet"
         else:
@@ -94,13 +91,6 @@ class ModelFactory:
             pooling="avg",
         )
         x = base_model.output
-
-        # x = Conv2D(64, (3, 3), padding='same', activation='relu')(img_input)
-        # x = MaxPooling2D((3, 3), padding='same')(x)
-        # x = Dropout(0.5)(x)
-        # x = layers.GlobalAveragePooling2D()(x)
-
-
         predictions = (
             Dense(len(class_names), activation="softmax", name="predictions")(x)
             if len(class_names) > 2
@@ -109,7 +99,6 @@ class ModelFactory:
             )
         )
         model = Model(inputs=img_input, outputs=predictions)
-        print("************************finish build************************")
 
         if weights_path == "":
             weights_path = None

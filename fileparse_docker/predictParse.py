@@ -27,7 +27,6 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mat_img
 from torch.utils.data import DataLoader
 from suanpan.storage import storage
-import base64
 
 
 def get_all_files(dir):
@@ -67,150 +66,12 @@ class DatasetGenerator(Dataset):
         self.listImageLabels = []
         self.transform = transform
         self.outputPath = outputPath
-        # if not (pathImageDirectory == None or pathDatasetFile == None):
-        #     # ---- Open file, get image paths and labels
-        #     fileDescriptor = open(pathDatasetFile, "r")
-        #     # ---- get into the loop
-        #     line = True
-        #     while line:
-        #         line = fileDescriptor.readline()
-        #         # --- if not empty
-        #         if line:
-        #             lineItems = line.split()
-        #             imagePath = os.path.join(pathImageDirectory, lineItems[0])
-        #             imageLabel = lineItems[1:]
-        #             imageLabel = [int(i) for i in imageLabel]
-        #             self.listImagePaths.append(imagePath)
-        #             self.listImageLabels.append(imageLabel)
-        #
-        #     fileDescriptor.close()
-
-        self.SERIESES = [
-            "W胸部后前位",
-            "胸部正位",
-            "胸部后前位",
-            "Chest",
-            "pa",
-            "DX-胸部",
-            "床边胸片正位",
-            "V04_0014",
-            "TChestap.",
-            "ap",
-            "WChestp.a",
-            "W033Chestp.a.",
-        ]
-
-    # add by rdw 2019-4-2
-    def __caculateClassStatic(self):
-        nClass = len(self.listImageLabels[0])
-        self.listLabelSum = np.zeros([nClass])
-        for i in range(len(self.listImageLabels)):
-            for j in range(nClass):
-                self.listLabelSum[j] = self.listLabelSum[j] + self.listImageLabels[i][j]
-        return self.listLabelSum
-
-    # add by rdw 2019-4-2
-    def getClassStatic(self):
-        if not hasattr(self, "listLabelSum"):
-            self.__caculateClassStatic()
-        return self.listLabelSum
-
-    # open file
-    def transformImageData(self, imageData):
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return imageData
-
-    def getImageDataFromFile(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-
-            if sucess == False:
-                return None
-        except:
-            # log.error("DatasetGenerator.getImageDataFromFile?error=读取二级制文件出现异常")
-            return None
-        return imageData
-
-    # 返回PIL格式，１　解析　　２　进行图像转换
-    def openFile(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-
-            if sucess == False:
-                return None
-        except Exception as e:
-            # log.error("读取二级制文件出现异常={}".format(e))
-            return None
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return imageData
-
-    # 返回PIL格式，１　解析　　２　进行图像转换
-    def openFileReturnFlag(self, filePath):
-        try:
-            if filePath.find("png") != -1:
-                sucess, imageData = self.__read_png(filePath)
-            elif filePath.find("dcm") != -1:
-                sucess, imageData = self.__read_dicom(filePath)
-            else:
-                sucess, imageData = self.__read_dicom(filePath)
-            if sucess == False:
-                return False, imageData
-        except Exception as e:
-            # log.error("读取二级制文件出现异常={}".format(e))
-            return False, imageData
-        if self.transform != None:
-            imageData = self.transform(imageData)
-        return True, imageData
-
-    # 将所有的文件格式修改为png格式
-    def convert2Png(self, pngFileBasePath, pngLabelFile, pngNumber=None):
-        pngFile = open(pngLabelFile, "a")
-        for i in range(len(self.listImagePaths)):
-            path = self.listImagePaths[i]
-            img_data = self.openFile(path)
-            if None == img_data:
-                print("解析dicom文件错误, error file continue .... ....")
-                continue
-            file_name = os.path.basename(path)
-            print("{}-{}".format(i, file_name))
-            labels = ""
-            for j in range(len(self.listImageLabels[i])):
-                labels = labels + " {}".format(self.listImageLabels[i][j])
-
-            if pngNumber == None:
-                png_file_name = file_name + ".png"
-                png_file_path = os.path.join(pngFileBasePath, png_file_name)
-                img_data.save(png_file_path, "png")
-                label_cell = png_file_name + labels + "\r\n"
-                pngFile.write(label_cell)
-            else:
-                for num in range(pngNumber):
-                    png_file_name = "{}-{}.png".format(file_name, num)
-                    png_file_path = os.path.join(pngFileBasePath, png_file_name)
-                    img_data.save(png_file_path, "png")
-                    label_cell = png_file_name + labels + "\r\n"
-                    pngFile.write(label_cell)
-                    img_data = self.openFile(path)
-        pngFile.close()
 
     def __getitem__(self, index):
         # errorLabel = torch.FloatTensor(np.zeros([100]))
         print("********start********" + str(index))
         imagePath = self.listImagePaths[index]
         sucess = False
-        # imageLabel = torch.FloatTensor(self.listImageLabels[index])
         try:
             if imagePath.find("png") != -1:
                 sucess, imageData = self.__read_png(imagePath)
@@ -222,9 +83,6 @@ class DatasetGenerator(Dataset):
         except:
             print("except")
             pass
-            # if sucess == False:
-            #     #log.error("返回二级制文件错误,success={}".format(sucess))
-            #     return errorLabel, errorLabel
         if type(imageData) == Image.Image:
             print("save image ", index)
             if os.path.isdir(self.pathImageDirectory):
@@ -239,16 +97,9 @@ class DatasetGenerator(Dataset):
                 os.makedirs(pngdir[0])
             print(pngdir[0])
             imageData.save(pngpath)
-        # except Exception as e:
-        #     log.error("读取二级制文件出现异常={}".format(e))
-        # return [0],[0]
-
-        # if self.transform != None:
-        #     imageData = self.transform(imageData)
 
         return imageData, []
 
-    # --------------------------------------------------------------------------------
     def __len__(self):
         return len(self.listImagePaths)
 
@@ -310,20 +161,6 @@ class DatasetGenerator(Dataset):
         if BeRightModality == False:
             # log.error('DatasetGenerator.__read_dicom?error=当前设备类型错误{}'.format(modality))
             return False, "DX DR CR类型的图像Modality={}".format(modality)
-
-        # 当ｓｅｒｉｅｓ　ｄｅｓ
-        """
-        BeRightProtocol = False
-        sdes = dcmFile.SeriesDescription
-        for ni in range(len(self.SERIESES)):
-            sdes = sdes.replace(' ','')
-            if sdes == self.SERIESES[ni]:
-                BeRightProtocol = True
-                break
-        if BeRightProtocol == False:
-            #log.error('DatasetGenerator.__read_dicom?error=当前检查部位错误sdes={}'.format(sdes))
-            return False, None
-        """
 
         needWL = False
         if hasattr(dcmFile, "BitsAllocated"):
@@ -435,16 +272,6 @@ class DatasetGenerator(Dataset):
         )
 
         lut = self.__generate_lut(invert)
-        # maxDen = len(lut)
-        # data[data > maxDen - 1] = maxDen - 1
-        # data[data < 0] = 0
-
-        # @1
-        # des_data = [lut[data[i][j]] for i in range(data.shape[0]) for j in range(data.shape[1])]
-        # des_data = np.array(des_data)
-        # des_data = des_data.reshape([data.shape[0], data.shape[1]])
-        # @2
-        # des_data = cv2.LUT(data,lut)
 
         for i in range(data.shape[0]):
             for j in range(data.shape[1]):
@@ -499,34 +326,32 @@ class StreamDemo(Stream):
         envparam = HasArguments.getArgListFromEnv()
         userId = envparam[envparam.index("--stream-user-id") + 1]
         appId = envparam[envparam.index("--stream-app-id") + 1]
-        filePathDcom = "studio/{}/{}/{}/dcom".format(
-            userId, appId, args.inputData1["id"]
-        )
-        # 自定义代码
-        localDcom = "./dcom"
-        localPng = "./images"
-        print(filePathDcom)
-        if os.path.exists(localDcom):
-            shutil.rmtree(localDcom)
-        if os.path.exists(localPng):
-            shutil.rmtree(localPng)
-        print("studio/100090/4518/" + str(args.inputData1["id"]) + "/images/Y2.png")
-        filecheck = storage.isFile(
-            objectName="studio/100090/4518/"
-            + str(args.inputData1["id"])
-            + "/images/Y2.png"
-        )
-        print(filecheck)
-        storage.downloadFolder(folderName=filePathDcom, folderPath=localDcom)
-        ds = DatasetGenerator(localDcom, localPng)
-        for i, d in enumerate(ds):
-            print(i + 1, "images done.")
-        filePathPng = "studio/{}/{}/{}/images".format(
-            userId, appId, args.inputData1["id"]
-        )
-        storage.uploadFolder(folderName=filePathPng, folderPath=localPng)
-        shutil.rmtree(localPng)
-        shutil.rmtree(localDcom)
+
+        if args.inputData1["type"] == "start":
+            filePathDcom = "studio/{}/{}/{}/predict/{}".format(
+                userId, appId, args.inputData1["programId"], args.inputData1["fileName"]
+            )
+            filePathPng = "studio/{}/{}/{}/predict/{}/{}.png".format(
+                userId,
+                appId,
+                args.inputData1["programId"],
+                args.inputData1["fileName"],
+                args.inputData1["fileName"],
+            )
+            localPng = "./{}.png".format(args.inputData1["fileName"])
+            localDcom = "./{}".format(args.inputData1["fileName"])
+            localPath = "./"
+            storage.downloadFile(objectName=filePathDcom, filePath=localDcom)
+            print(filePathDcom)
+            ds = DatasetGenerator(localDcom, localPath)
+            for i, d in enumerate(ds):
+                print(i + 1, "images done.")
+
+            storage.uploadFile(objectName=filePathPng, filePath=localPng)
+            os.remove(localPng)
+            os.remove(localDcom)
+        elif args.inputData1["type"] == "status":
+            pass
         return args.inputData1
 
 
