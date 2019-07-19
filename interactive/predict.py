@@ -31,6 +31,19 @@ class StreamDemo(Stream):
 
         urlRun = "http://{}:{}/app/run".format(host, port)
 
+        status = {
+            "0": "none",
+            "1": "running",
+            "2": "stopped",
+            "3": "success",
+            "4": "failed",
+            "5": "starting",
+            "6": "stopping",
+            "7": "dead",
+            "8": "cron",
+            "9": "waiting",
+        }
+        # app 处于 cron 状态，就不会被运行
         if args.inputData1["type"] == "start":
             dataRun = {
                 "id": str(templateId),
@@ -68,7 +81,7 @@ class StreamDemo(Stream):
             rStatus = requests.post(url=urlStatus, json=dataStatus)
             print(rStatus)
             print(rStatus.content)
-            if json.loads(rStatus.content)["map"]["status"] == "1":
+            if json.loads(rStatus.content)["map"]["status"] in ["1", "5", "6", "8", "9"]:
                 self.send({"status": "waiting"})
                 return None
             else:
@@ -82,17 +95,11 @@ class StreamDemo(Stream):
             rStatus = requests.post(url=urlStatus, json=dataStatus)
             print(rStatus)
             print(rStatus.content)
-            if json.loads(rStatus.content)["map"]["status"] == "3":
-                self.send({"status": "success"})
-                return None
-            elif json.loads(rStatus.content)["map"]["status"] == "1":
-                self.send({"status": "running"})
-                return None
-            elif json.loads(rStatus.content)["map"]["status"] == "4":
-                self.send({"status": "fail"})
+            if json.loads(rStatus.content)["map"]["status"] in status.keys():
+                self.send({"status": status[json.loads(rStatus.content)["map"]["status"]]})
                 return None
             else:
-                self.send({"status": "running"})
+                self.send({"status": "unknown status"})
                 return None
 
         return args.outputData1
