@@ -47,6 +47,10 @@ class StreamDemo(Stream):
         # app 处于 cron 状态，就不会被运行
         if args.inputData1["type"] == "start":
             ossPath = args.inputData1["data"]
+            try:
+                trainTest = str(args.inputData1["xunLian"]/100)
+            except:
+                trainTest = "0.8"
             dataRun = {
                 "id": "4406",
                 "nodeId": "3e2f49509f0511e9a1e9b3f60be454b7",
@@ -54,7 +58,8 @@ class StreamDemo(Stream):
                 "setedParams": {
                     # 图片路径
                     "f8ca64d09f0411e9a1e9b3f60be454b7": {
-                        "param1": {"value": "{}/images".format(ossPath)}
+                        "param1": {"value": "{}/images".format(ossPath)},
+                        "param2": {"value": trainTest}
                     },
                     # 模型路径
                     "c415f080a44d11e9a2ebe344cb7c1847": {

@@ -81,39 +81,35 @@ class StreamDemo(Stream):
             shutil.rmtree(inputModel)
 
         if args.inputData1["type"] == "start":
-            if self.model["id"] != programId:
-                self.loadModel(inputModel, userId, appId, programId, modelName)
+            try:
+                if self.model["id"] != programId:
+                    self.loadModel(inputModel, userId, appId, programId, modelName)
 
-            x = self.loadImage(
-                inputImage, imageSize, userId, appId, programId, fileName
-            )
+                x = self.loadImage(
+                    inputImage, imageSize, userId, appId, programId, fileName
+                )
 
-            test_file = os.listdir(inputImage)
-            result = self.model["model"].predict(x)
-            class_names = list(self.model["map"].keys())
-            if len(class_names) == 2:
-                result = class_names[1] if result > 0.5 else class_names[0]
-            else:
-                result = class_names[np.argsort(result[0])[::-1][0]]
-            print("predict result : {}".format(result))
-            with open(os.path.join("./{}.json".format(test_file[0][:-4])), "w") as f:
-                json.dump({"result": result}, f)
-            storage.uploadFile(
-                objectName="studio/{}/{}/{}/predict/{}.json".format(
-                    userId, appId, args.inputData1["programId"], test_file[0][:-4]
-                ),
-                filePath="./{}.json".format(test_file[0][:-4]),
-            )
-            self.send({"status": "success"})
-            
-            if os.path.exists(inputImage):
-                shutil.rmtree(inputImage)
+                test_file = os.listdir(inputImage)
+                result = self.model["model"].predict(x)
+                class_names = list(self.model["map"].keys())
+                if len(class_names) == 2:
+                    result = class_names[1] if result > 0.5 else class_names[0]
+                else:
+                    result = class_names[np.argsort(result[0])[::-1][0]]
+                print("predict result : {}".format(result))
 
-            if os.path.exists(inputModel):
-                shutil.rmtree(inputModel)
+                self.send({"status": "success","result": result})
+                
+                if os.path.exists(inputImage):
+                    shutil.rmtree(inputImage)
 
-            if os.path.exists("./{}.json".format(test_file[0][:-4])):
-                os.remove("./{}.json".format(test_file[0][:-4]))
+                if os.path.exists(inputModel):
+                    shutil.rmtree(inputModel)
+            except:
+                self.send({"status": "failed","result": None})
+        else:
+            self.send({"status": "wrong type","result": None})
+
         return None
 
 

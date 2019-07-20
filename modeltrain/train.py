@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 from __suanpan__ import tensorflow
 
 from suanpan.docker import DockerComponent as dc
-from suanpan.docker.arguments import Folder, String
+from suanpan.docker.arguments import Folder, String, Float
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 from keras.preprocessing.image import ImageDataGenerator
@@ -19,9 +19,11 @@ from suanpan.storage import storage
 import pandas as pd
 import shutil
 
+
 # 定义输入
 @dc.input(Folder(key="inputData1", required=True))
 @dc.param(String(key="param1"))
+@dc.param(Float(key="param2"))
 # 定义输出
 @dc.output(Folder(key="outputData1", required=True))
 def Demo(context):
@@ -29,6 +31,10 @@ def Demo(context):
     args = context.args
     # 查看上一节点发送的 args.inputData1 数据
     print(args.inputData1)
+
+    downloadPath = "./images"
+    imagePath = "./images_sort"
+
     if not os.path.exists(
         "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5"
     ):
@@ -38,28 +44,30 @@ def Demo(context):
         )
     # 自定义代码
     outputDir = args.outputData1
+    if os.path.exists(downloadPath):
+        shutil.rmtree(downloadPath)
+    if os.path.exists(imagePath):
+        shutil.rmtree(imagePath)
+
     if args.param1 == None:
         trainDir = os.path.join(args.inputData1, "train")
         validationDir = os.path.join(args.inputData1, "test")
     else:
-        image_path = "./images"
-        if os.path.exists(image_path):
-            shutil.rmtree(image_path)
-        storage.downloadFolder(folderName=args.param1, folderPath=image_path)
-        print(os.path.split(args.param1)[0] + "/detail.json")
+        ossPath = args.param1
+        trainTestSplit = args.param2 if args.param2 != None else 0.8
+        print("************Split train and test : {}***********".format(trainTestSplit))
+        storage.downloadFolder(folderName=ossPath, folderPath=downloadPath)
+        print(os.path.split(ossPath)[0] + "/detail.json")
         storage.downloadFile(
-            objectName=os.path.split(args.param1)[0] + "/detail.json",
+            objectName=os.path.split(ossPath)[0] + "/detail.json",
             filePath="detail.json",
         )
-        with open(os.path.join("detail.json"), "r") as f:
+        with open("detail.json", "r") as f:
             label_detail = json.load(f)
-        imagePath = "./images_sort"
-        if os.path.exists(imagePath):
-            shutil.rmtree(imagePath)
+        
         os.mkdir(imagePath)
         os.mkdir(os.path.join(imagePath, "train"))
         os.mkdir(os.path.join(imagePath, "test"))
-        # labels = pd.DataFrame(label_detail["images"])
         labels = {}
         labels["name"] = []
         labels["level"] = []
@@ -74,17 +82,17 @@ def Demo(context):
         foldercheck = []
         for m in list(set(labels["level"].values)):
             labels_tmp = labels[labels["level"] == m]
-            foldercheck.append(len(labels_tmp) * 0.8 > (len(labels_tmp) - 1))
+            foldercheck.append(len(labels_tmp) * trainTestSplit > (len(labels_tmp) - 1))
             print(labels_tmp["level"])
             for j in range(len(labels_tmp)):
-                if j < len(labels_tmp) * 0.8:
+                if j < len(labels_tmp) * trainTestSplit:
                     print(os.path.join(imagePath, "train", labels_tmp["level"].iloc[j]))
-                    print(os.path.join("./images", labels_tmp["name"].iloc[j]))
-                    src = os.path.join("./images", labels_tmp["name"].iloc[j] + ".png")
+                    print(os.path.join(downloadPath, labels_tmp["name"].iloc[j]))
+                    src = os.path.join(downloadPath, labels_tmp["name"].iloc[j] + ".png")
                     dst = os.path.join(imagePath, "train", labels_tmp["level"].iloc[j])
                     shutil.copy(src, os.path.join(dst, str(j) + os.path.split(src)[1]))
                 else:
-                    src = os.path.join("./images", labels_tmp["name"].iloc[j] + ".png")
+                    src = os.path.join(downloadPath, labels_tmp["name"].iloc[j] + ".png")
                     dst = os.path.join(imagePath, "test", labels_tmp["level"].iloc[j])
                     shutil.copy(src, os.path.join(dst, str(j) + os.path.split(src)[1]))
         trainDir = os.path.join(imagePath, "train")
@@ -236,9 +244,10 @@ def Demo(context):
             shuffle=False,
         )
     )
-    if args.param1 != None:
-        shutil.rmtree("./images_sort")
-        shutil.rmtree("./images")
+    if os.path.exists(downloadPath):
+        shutil.rmtree(downloadPath)
+    if os.path.exists(imagePath):
+        shutil.rmtree(imagePath)
     # 将 args.outputData1 作为输出发送给下一节点
     return args.outputData1
 
