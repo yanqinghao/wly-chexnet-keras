@@ -89,7 +89,6 @@ class StreamDemo(Stream):
                     inputImage, imageSize, userId, appId, programId, fileName
                 )
 
-                test_file = os.listdir(inputImage)
                 result = self.model["model"].predict(x)
                 class_names = list(self.model["map"].keys())
                 if len(class_names) == 2:
@@ -98,17 +97,22 @@ class StreamDemo(Stream):
                     result = class_names[np.argsort(result[0])[::-1][0]]
                 print("predict result : {}".format(result))
 
-                self.send({"status": "success","result": result})
-                
+                self.send({"status": "success", "result": result})
+
+                with open("recommendation.json", "w") as f:
+                    json.dump({"id": self.model["id"]}, f)
+                ossPath = "studio/{}/{}/recommendation.json".format(userId, appId)
+                storage.uploadFile(objectName=ossPath, filePath="recommendation.json")
+
                 if os.path.exists(inputImage):
                     shutil.rmtree(inputImage)
 
                 if os.path.exists(inputModel):
                     shutil.rmtree(inputModel)
             except:
-                self.send({"status": "failed","result": None})
+                self.send({"status": "failed", "result": None})
         else:
-            self.send({"status": "wrong type","result": None})
+            self.send({"status": "wrong type", "result": None})
 
         return None
 

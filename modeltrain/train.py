@@ -64,7 +64,13 @@ def Demo(context):
         )
         with open("detail.json", "r") as f:
             label_detail = json.load(f)
-        
+        with open("traininginfo.json", "w") as f:
+            json.dump({"imageNum": len(label_detail["images"])}, f)
+        if os.path.split(ossPath)[0] != None:
+            storage.uploadFile(
+                objectName="{}/traininginfo.json".format(os.path.split(ossPath)[0]),
+                filePath="traininginfo.json",
+            )
         os.mkdir(imagePath)
         os.mkdir(os.path.join(imagePath, "train"))
         os.mkdir(os.path.join(imagePath, "test"))
@@ -88,11 +94,15 @@ def Demo(context):
                 if j < len(labels_tmp) * trainTestSplit:
                     print(os.path.join(imagePath, "train", labels_tmp["level"].iloc[j]))
                     print(os.path.join(downloadPath, labels_tmp["name"].iloc[j]))
-                    src = os.path.join(downloadPath, labels_tmp["name"].iloc[j] + ".png")
+                    src = os.path.join(
+                        downloadPath, labels_tmp["name"].iloc[j] + ".png"
+                    )
                     dst = os.path.join(imagePath, "train", labels_tmp["level"].iloc[j])
                     shutil.copy(src, os.path.join(dst, str(j) + os.path.split(src)[1]))
                 else:
-                    src = os.path.join(downloadPath, labels_tmp["name"].iloc[j] + ".png")
+                    src = os.path.join(
+                        downloadPath, labels_tmp["name"].iloc[j] + ".png"
+                    )
                     dst = os.path.join(imagePath, "test", labels_tmp["level"].iloc[j])
                     shutil.copy(src, os.path.join(dst, str(j) + os.path.split(src)[1]))
         trainDir = os.path.join(imagePath, "train")
