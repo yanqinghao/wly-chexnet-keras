@@ -1,22 +1,22 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
-from suanpan.stream import Handler as h
-from suanpan.stream import Stream
-from suanpan.stream.arguments import String, Json, Float
-from suanpan.interfaces import HasArguments
-from suanpan.model import Model
-from suanpan.storage import storage
 import os
 import json
-from model import ModelFactory
+import shutil
+
 from keras.preprocessing import image
 import numpy as np
-import shutil
+from suanpan.stream import Handler as h
+from suanpan.stream import Stream
+from suanpan.stream.arguments import Json
+from suanpan.interfaces import HasArguments
+from suanpan.storage import storage
+from model import ModelFactory
 
 
 class StreamDemo(Stream):
-    def afterInit(self):  # 初始化模型
+    def afterInit(self, *args, **kwargs):  # 初始化模型
         self.model = {"id": None, "model": None, "map": None}
 
     def loadImage(self, inputImage, imageSize, userId, appId, programId, fileName):

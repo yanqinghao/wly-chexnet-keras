@@ -328,6 +328,10 @@ class DatasetGenerator(Dataset):
         return img_dict
 
 
+class FolderException(Exception):
+    pass
+
+
 class StreamDemo(Stream):
     # 定义输入
     @h.input(Json(key="inputData1", required=True))
@@ -352,37 +356,63 @@ class StreamDemo(Stream):
         if storage.isFile(objectName=osslogFile):
             storage.removeFile(fileName=osslogFile)
 
+        with open(logFile, "w") as f:
+            json.dump({"status": "running"}, f)
+        storage.uploadFile(objectName=osslogFile, filePath=logFile)
+
         if os.path.exists(localDcom):
             shutil.rmtree(localDcom)
         if os.path.exists(localPng):
             shutil.rmtree(localPng)
+        try:
+            if storage.isFolder(folderName=filePathDcom):
+                storage.downloadFolder(folderName=filePathDcom, folderPath=localDcom)
+            else:
+                raise FolderException("No Dcom Folder")
 
-        storage.downloadFolder(folderName=filePathDcom, folderPath=localDcom)
-        ds = DatasetGenerator(
-            pathImageDirectory=localDcom,
-            outputPath=localPng,
-            userId=userId,
-            appId=appId,
-            programId=programId,
-        )
+            ds = DatasetGenerator(
+                pathImageDirectory=localDcom,
+                outputPath=localPng,
+                userId=userId,
+                appId=appId,
+                programId=programId,
+            )
 
-        fileLen = len(ds.listImagePaths)
-        with open(logFile, "w") as f:
-            json.dump({"now": 0, "fileNum": fileLen}, f)
-
-        storage.uploadFile(objectName=osslogFile, filePath=logFile)
-        for i, d in enumerate(ds):
+            fileLen = len(ds.listImagePaths)
             with open(logFile, "w") as f:
-                json.dump({"now": i + 1, "fileNum": fileLen}, f)
+                json.dump({"status": "running", "now": 0, "fileNum": fileLen}, f)
 
             storage.uploadFile(objectName=osslogFile, filePath=logFile)
-            print(i + 1, "images done.")
+            for i, d in enumerate(ds):
+                with open(logFile, "w") as f:
+                    json.dump(
+                        {"status": "running", "now": i + 1, "fileNum": fileLen}, f
+                    )
 
-        if os.path.exists(localPng):
-            shutil.rmtree(localPng)
-        if os.path.exists(localDcom):
-            shutil.rmtree(localDcom)
-        return args.inputData1
+                storage.uploadFile(objectName=osslogFile, filePath=logFile)
+                print(i + 1, "images done.")
+
+            if os.path.exists(localPng):
+                shutil.rmtree(localPng)
+            if os.path.exists(localDcom):
+                shutil.rmtree(localDcom)
+
+            with open(logFile, "w") as f:
+                json.dump({"status": "success", "now": i + 1, "fileNum": fileLen}, f)
+            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            self.send(args.inputData1)
+        except FolderException as fe:
+            print("Exception", fe)
+            with open(logFile, "w") as f:
+                json.dump({"status": "failed", "message": "EmptyFolder"}, f)
+            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+        except Exception as e:
+            print("Exception", e)
+            with open(logFile, "w") as f:
+                json.dump({"status": "failed", "message": "Exception"}, f)
+            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+
+        return None
 
 
 if __name__ == "__main__":
