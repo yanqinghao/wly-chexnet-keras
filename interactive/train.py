@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 
 from suanpan.stream import Handler as h
 from suanpan.stream import Stream
-from suanpan.stream.arguments import String, Json
+from suanpan.stream.arguments import Int, Json, String
 from suanpan.interfaces import HasArguments
 from suanpan.storage import storage
 import requests
@@ -13,6 +13,10 @@ import json
 class StreamDemo(Stream):
     # 定义输入
     @h.input(Json(key="inputData1", required=True))
+    @h.param(Int(key="param1", default=30007))
+    @h.param(Int(key="param2", default=4406))
+    @h.param(String(key="param3", default="f8ca64d09f0411e9a1e9b3f60be454b7"))
+    @h.param(String(key="param4", default="c415f080a44d11e9a2ebe344cb7c1847"))
     # 定义输出
     @h.output(Json(key="outputData1"))
     def call(self, context):
@@ -24,8 +28,8 @@ class StreamDemo(Stream):
         userId = envparam[envparam.index("--stream-user-id") + 1]
         appId = envparam[envparam.index("--stream-app-id") + 1]
         host = envparam[envparam.index("--stream-host") + 1]
-        port = 30007
-        templateId = 4406
+        port = args.param1
+        templateId = args.param2
 
         urlStatus = "http://{}:{}/app/status".format(host, port)
         dataStatus = {"id": templateId}
@@ -52,17 +56,17 @@ class StreamDemo(Stream):
             except:
                 trainTest = "0.8"
             dataRun = {
-                "id": "4406",
-                "nodeId": "3e2f49509f0511e9a1e9b3f60be454b7",
+                "id": str(args.param2),
+                "nodeId": args.param3,
                 "type": "runStart",
                 "setedParams": {
                     # 图片路径
-                    "f8ca64d09f0411e9a1e9b3f60be454b7": {
+                    args.param3: {
                         "param1": {"value": "{}/images".format(ossPath)},
                         "param2": {"value": trainTest}
                     },
                     # 模型路径
-                    "c415f080a44d11e9a2ebe344cb7c1847": {
+                    args.param4: {
                         "param1": {"value": "{}/model".format(ossPath)}
                     },
                 },
@@ -73,11 +77,19 @@ class StreamDemo(Stream):
             rStatus = requests.post(url=urlStatus, json=dataStatus)
             print(rStatus)
             print(rStatus.content)
-            if json.loads(rStatus.content)["map"]["status"] in ["1", "5", "6", "8", "9"]:
-                self.send({"status": "waiting"})
-                return None
+            if json.loads(rStatus.content)["map"]:
+                if json.loads(rStatus.content)["map"]["status"] in ["1", "5", "6", "8", "9"]:
+                    self.send({"status": "waiting"})
+                    return None
+                else:
+                    print("start running")
+                    rRun = requests.post(url=urlRun, json=dataRun)
+                    print(rRun)
+                    print(rRun.content)
+                    self.send({"status": "running"})
+                    return None
             else:
-                print("start running")
+                print("First time start running")
                 rRun = requests.post(url=urlRun, json=dataRun)
                 print(rRun)
                 print(rRun.content)
@@ -87,12 +99,19 @@ class StreamDemo(Stream):
             rStatus = requests.post(url=urlStatus, json=dataStatus)
             print(rStatus)
             print(rStatus.content)
-            if json.loads(rStatus.content)["map"]["status"] in status.keys():
-                self.send({"status": status[json.loads(rStatus.content)["map"]["status"]]})
-                return None
+            if json.loads(rStatus.content)["map"]:
+                if json.loads(rStatus.content)["map"]["status"] in status.keys():
+                    self.send({"status": status[json.loads(rStatus.content)["map"]["status"]]})
+                    return None
+                else:
+                    self.send({"status": "unknown status"})
+                    return None
             else:
                 self.send({"status": "unknown status"})
                 return None
+        else:
+            self.send({"status": "unknown type"})
+            return None
 
         return args.outputData1
 
