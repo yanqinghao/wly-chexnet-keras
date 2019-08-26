@@ -11,12 +11,14 @@ import json
 
 
 class StreamDemo(Stream):
+    ARGUMENTS = [
+        Int(key="param1", default=30007),
+        Int(key="param2", default=6190),
+        String(key="param3", default="f8ca64d09f0411e9a1e9b3f60be454b7"),
+        String(key="param4", default="c415f080a44d11e9a2ebe344cb7c1847"),
+    ]
     # 定义输入
     @h.input(Json(key="inputData1", required=True))
-    @h.param(Int(key="param1", default=30007))
-    @h.param(Int(key="param2", default=4406))
-    @h.param(String(key="param3", default="f8ca64d09f0411e9a1e9b3f60be454b7"))
-    @h.param(String(key="param4", default="c415f080a44d11e9a2ebe344cb7c1847"))
     # 定义输出
     @h.output(Json(key="outputData1"))
     def call(self, context):
@@ -52,7 +54,7 @@ class StreamDemo(Stream):
         if args.inputData1["type"] == "start":
             ossPath = args.inputData1["data"]
             try:
-                trainTest = str(args.inputData1["xunLian"]/100)
+                trainTest = str(args.inputData1["xunLian"] / 100)
             except:
                 trainTest = "0.8"
             dataRun = {
@@ -63,12 +65,10 @@ class StreamDemo(Stream):
                     # 图片路径
                     args.param3: {
                         "param1": {"value": "{}/images".format(ossPath)},
-                        "param2": {"value": trainTest}
+                        "param2": {"value": trainTest},
                     },
                     # 模型路径
-                    args.param4: {
-                        "param1": {"value": "{}/model".format(ossPath)}
-                    },
+                    args.param4: {"param1": {"value": "{}/model".format(ossPath)}},
                 },
             }
             osslogFile = "{}/training_log.json".format(ossPath)
@@ -78,7 +78,13 @@ class StreamDemo(Stream):
             print(rStatus)
             print(rStatus.content)
             if json.loads(rStatus.content)["map"]:
-                if json.loads(rStatus.content)["map"]["status"] in ["1", "5", "6", "8", "9"]:
+                if json.loads(rStatus.content)["map"]["status"] in [
+                    "1",
+                    "5",
+                    "6",
+                    "8",
+                    "9",
+                ]:
                     self.send({"status": "waiting"})
                     return None
                 else:
@@ -101,7 +107,9 @@ class StreamDemo(Stream):
             print(rStatus.content)
             if json.loads(rStatus.content)["map"]:
                 if json.loads(rStatus.content)["map"]["status"] in status.keys():
-                    self.send({"status": status[json.loads(rStatus.content)["map"]["status"]]})
+                    self.send(
+                        {"status": status[json.loads(rStatus.content)["map"]["status"]]}
+                    )
                     return None
                 else:
                     self.send({"status": "unknown status"})
