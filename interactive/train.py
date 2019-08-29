@@ -72,8 +72,8 @@ class StreamDemo(Stream):
                 },
             }
             osslogFile = "{}/training_log.json".format(ossPath)
-            if storage.isFile(objectName=osslogFile):
-                storage.removeFile(fileName=osslogFile)
+            if storage.isFile(osslogFile):
+                storage.remove(osslogFile)
             rStatus = requests.post(url=urlStatus, json=dataStatus)
             print(rStatus)
             print(rStatus.content)

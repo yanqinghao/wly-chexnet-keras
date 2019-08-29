@@ -20,15 +20,16 @@ class StreamDemo(Stream):
         self.model = {"id": None, "model": None, "map": None}
 
     def loadImage(self, inputImage, imageSize, userId, appId, programId, fileName):
-        ossFolder = "studio/{}/{}/{}/predict/{}".format(
-            userId, appId, programId, fileName
+        ossFolder = "studio/{}/{}/{}/predict/{}/{}.png".format(
+            userId, appId, programId, fileName, fileName
         )
         print("load image from {}".format(ossFolder))
-        storage.downloadFolder(folderName=ossFolder, folderPath=inputImage)
+        storage.download(ossFolder, inputImage)
         testPath = inputImage
-        testFile = os.listdir(inputImage)
+        # testFile = os.listdir(inputImage)
+        testFile = testPath
         images = image.load_img(
-            os.path.join(testPath, testFile[0]),
+            testFile,
             grayscale=False,
             target_size=(imageSize, imageSize),
         )
@@ -40,7 +41,7 @@ class StreamDemo(Stream):
         self.model["id"] = programId
         ossFolder = "studio/{}/{}/{}/model".format(userId, appId, programId)
         print("load model from {}".format(ossFolder))
-        storage.downloadFolder(folderName=ossFolder, folderPath=inputModel)
+        storage.download(ossFolder, inputModel)
         output_weights_path = os.path.join(inputModel, "weight.h5")
         with open(os.path.join(inputModel, "label_map.json"), "r") as load_f:
             label_map = json.load(load_f)
@@ -69,13 +70,13 @@ class StreamDemo(Stream):
         appId = envparam[envparam.index("--stream-app-id") + 1]
         programId = args.inputData1["programId"]
         fileName = args.inputData1["fileName"]
-        inputImage = "./imagefile"
+        inputImage = "./imagefile/predict.png"
         inputModel = "./modelfile"
         modelName = "DenseNet121"
         imageSize = 224
 
         if os.path.exists(inputImage):
-            shutil.rmtree(inputImage)
+            os.remove(inputImage)
 
         if os.path.exists(inputModel):
             shutil.rmtree(inputModel)
@@ -102,10 +103,10 @@ class StreamDemo(Stream):
                 with open("recommendation.json", "w") as f:
                     json.dump({"id": self.model["id"]}, f)
                 ossPath = "studio/{}/{}/recommendation.json".format(userId, appId)
-                storage.uploadFile(objectName=ossPath, filePath="recommendation.json")
+                storage.upload(ossPath, "recommendation.json")
 
                 if os.path.exists(inputImage):
-                    shutil.rmtree(inputImage)
+                    os.remove(inputImage)
 
                 if os.path.exists(inputModel):
                     shutil.rmtree(inputModel)

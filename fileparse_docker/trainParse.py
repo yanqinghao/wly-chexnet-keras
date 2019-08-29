@@ -111,7 +111,7 @@ class DatasetGenerator(Dataset):
                 filePng = "studio/{}/{}/{}/images/{}.png".format(
                     self.userId, self.appId, self.programId, imagePath[7:]
                 )
-                storage.uploadFile(objectName=filePng, filePath=pngpath)
+                storage.upload(filePng, pngpath)
 
         return None
 
@@ -353,20 +353,20 @@ class StreamDemo(Stream):
         localPng = "./images"
         logFile = "./parsinglog.json"
 
-        if storage.isFile(objectName=osslogFile):
-            storage.removeFile(fileName=osslogFile)
+        if storage.isFile(osslogFile):
+            storage.remove(osslogFile)
 
         with open(logFile, "w") as f:
             json.dump({"status": "running"}, f)
-        storage.uploadFile(objectName=osslogFile, filePath=logFile)
+        storage.upload(osslogFile, logFile)
 
         if os.path.exists(localDcom):
             shutil.rmtree(localDcom)
         if os.path.exists(localPng):
             shutil.rmtree(localPng)
         try:
-            if storage.isFolder(folderName=filePathDcom):
-                storage.downloadFolder(folderName=filePathDcom, folderPath=localDcom)
+            if storage.isFolder(filePathDcom):
+                storage.download(filePathDcom, localDcom)
             else:
                 raise FolderException("No Dcom Folder")
 
@@ -382,14 +382,14 @@ class StreamDemo(Stream):
             with open(logFile, "w") as f:
                 json.dump({"status": "running", "now": 0, "fileNum": fileLen}, f)
 
-            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            storage.upload(osslogFile, logFile)
             for i, d in enumerate(ds):
                 with open(logFile, "w") as f:
                     json.dump(
                         {"status": "running", "now": i + 1, "fileNum": fileLen}, f
                     )
 
-                storage.uploadFile(objectName=osslogFile, filePath=logFile)
+                storage.upload(osslogFile, logFile)
                 print(i + 1, "images done.")
 
             if os.path.exists(localPng):
@@ -399,18 +399,18 @@ class StreamDemo(Stream):
 
             with open(logFile, "w") as f:
                 json.dump({"status": "success", "now": i + 1, "fileNum": fileLen}, f)
-            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            storage.upload(osslogFile, logFile)
             self.send(args.inputData1)
         except FolderException as fe:
             print("Exception", fe)
             with open(logFile, "w") as f:
                 json.dump({"status": "failed", "message": "EmptyFolder"}, f)
-            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            storage.upload(osslogFile, logFile)
         except Exception as e:
             print("Exception", e)
             with open(logFile, "w") as f:
                 json.dump({"status": "failed", "message": "Exception"}, f)
-            storage.uploadFile(objectName=osslogFile, filePath=logFile)
+            storage.upload(osslogFile, logFile)
 
         return None
 

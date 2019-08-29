@@ -38,9 +38,9 @@ def Demo(context):
     if not os.path.exists(
         "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5"
     ):
-        storage.downloadFile(
-            objectName="common/model/keras/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
-            filePath="/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+        storage.download(
+            "common/model/keras/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+            "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
         )
     # 自定义代码
     outputDir = args.outputData1
@@ -56,20 +56,17 @@ def Demo(context):
         ossPath = args.param1
         trainTestSplit = args.param2 if args.param2 != None else 0.8
         print("************Split train and test : {}***********".format(trainTestSplit))
-        storage.downloadFolder(folderName=ossPath, folderPath=downloadPath)
+        storage.download(ossPath, downloadPath)
         print(os.path.split(ossPath)[0] + "/detail.json")
-        storage.downloadFile(
-            objectName=os.path.split(ossPath)[0] + "/detail.json",
-            filePath="detail.json",
-        )
+        storage.download(os.path.split(ossPath)[0] + "/detail.json", "detail.json")
         with open("detail.json", "r") as f:
             label_detail = json.load(f)
         with open("traininginfo.json", "w") as f:
             json.dump({"imageNum": len(label_detail["images"])}, f)
         if os.path.split(ossPath)[0] != None:
-            storage.uploadFile(
-                objectName="{}/traininginfo.json".format(os.path.split(ossPath)[0]),
-                filePath="traininginfo.json",
+            storage.upload(
+                "{}/traininginfo.json".format(os.path.split(ossPath)[0]),
+                "traininginfo.json",
             )
         os.mkdir(imagePath)
         os.mkdir(os.path.join(imagePath, "train"))

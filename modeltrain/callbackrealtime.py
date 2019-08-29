@@ -118,9 +118,9 @@ class CSVLoggerOss(Callback):
         with open("{}.json".format(self.filename[:-4]), "w") as f:
             json.dump(logDict, f)
         if self.osspath != None:
-            storage.uploadFile(
-                objectName="{}/{}.json".format(self.osspath, self.filename[:-4]),
-                filePath="{}.json".format(self.filename[:-4]),
+            storage.upload(
+                "{}/{}.json".format(self.osspath, self.filename[:-4]),
+                "{}.json".format(self.filename[:-4]),
             )
 
     def on_train_end(self, logs=None):

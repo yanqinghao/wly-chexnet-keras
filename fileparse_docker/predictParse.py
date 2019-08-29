@@ -341,15 +341,15 @@ class StreamDemo(Stream):
             localPng = "./{}.png".format(args.inputData1["fileName"])
             localDcom = "./{}".format(args.inputData1["fileName"])
             localPath = "./"
-            storage.downloadFile(objectName=filePathDcom, filePath=localDcom)
+            storage.download(filePathDcom, localDcom)
             print(filePathDcom)
             ds = DatasetGenerator(localDcom, localPath)
             for i, d in enumerate(ds):
                 print(i + 1, "images done.")
-
-            storage.uploadFile(objectName=filePathPng, filePath=localPng)
-            os.remove(localPng)
             os.remove(localDcom)
+            storage.upload(filePathPng, localPng)
+            os.remove(localPng)
+
         elif args.inputData1["type"] == "status":
             pass
         return args.inputData1
