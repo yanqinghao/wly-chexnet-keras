@@ -349,9 +349,9 @@ class StreamDemo(Stream):
         filePathDcom = "studio/{}/{}/{}/dcom".format(userId, appId, programId)
         osslogFile = "studio/{}/{}/{}/parsinglog.json".format(userId, appId, programId)
         # 自定义代码
-        localDcom = "./dcom"
-        localPng = "./images"
-        logFile = "./parsinglog.json"
+        localDcom = "/tmp/dcom"
+        localPng = "/tmp/images"
+        logFile = "/tmp/parsinglog.json"
 
         if storage.isFile(osslogFile):
             storage.remove(osslogFile)

@@ -70,8 +70,8 @@ class StreamDemo(Stream):
         appId = envparam[envparam.index("--stream-app-id") + 1]
         programId = args.inputData1["programId"]
         fileName = args.inputData1["fileName"]
-        inputImage = "./imagefile/predict.png"
-        inputModel = "./modelfile"
+        inputImage = "/tmp/imagefile/predict.png"
+        inputModel = "/tmp/modelfile"
         modelName = "DenseNet121"
         imageSize = 224
 

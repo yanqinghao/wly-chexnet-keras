@@ -338,9 +338,9 @@ class StreamDemo(Stream):
                 args.inputData1["fileName"],
                 args.inputData1["fileName"],
             )
-            localPng = "./{}.png".format(args.inputData1["fileName"])
-            localDcom = "./{}".format(args.inputData1["fileName"])
-            localPath = "./"
+            localPng = "/tmp/{}.png".format(args.inputData1["fileName"])
+            localDcom = "/tmp/{}".format(args.inputData1["fileName"])
+            localPath = "/tmp/"
             storage.download(filePathDcom, localDcom)
             print(filePathDcom)
             ds = DatasetGenerator(localDcom, localPath)

@@ -32,8 +32,8 @@ def Demo(context):
     # 查看上一节点发送的 args.inputData1 数据
     print(args.inputData1)
 
-    downloadPath = "./images"
-    imagePath = "./images_sort"
+    downloadPath = "/tmp/images"
+    imagePath = "/tmp/images_sort"
 
     if not os.path.exists(
         "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5"
