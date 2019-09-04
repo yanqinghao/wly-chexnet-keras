@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.7
 
-FROM registry.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_VERSION} as builder
+FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_VERSION} as builder
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
@@ -16,7 +16,7 @@ COPY . /build
 
 RUN bash tools/compress.sh
 
-FROM registry.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_VERSION}
+FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_VERSION}
 
 WORKDIR /wly
 
@@ -29,6 +29,8 @@ RUN pip install --upgrade pip
 COPY --from=builder /build /wly
 
 RUN pip install -r requirements.txt
+
+RUN pip install tensorflow-gpu
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 

@@ -30,6 +30,8 @@ COPY --from=builder /build /wly
 
 RUN pip install -r requirements.txt
 
+RUN pip install tensorflow-gpu
+
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
 CMD [ "bash" ]
