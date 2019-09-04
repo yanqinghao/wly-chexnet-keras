@@ -1,4 +1,4 @@
-suanpan==0.9.75
+# suanpan==0.9.76
 appdirs==1.4.3
 astroid==2.2.5
 attrs==19.1.0
@@ -50,5 +50,5 @@ urllib3==1.25.3
 Werkzeug==0.15.4
 wrapt==1.11.2
 keras
-# tensorflow-gpu
-tensorflow
+# # tensorflow-gpu
+# tensorflow
