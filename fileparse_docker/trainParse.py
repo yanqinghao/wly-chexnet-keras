@@ -97,8 +97,8 @@ class DatasetGenerator(Dataset):
             if type(imageData) == Image.Image:
                 print("save image ", index)
                 if os.path.isdir(self.pathImageDirectory):
-                    print(imagePath[6:])
-                    filepath = imagePath[6:]
+                    print(imagePath[9:])
+                    filepath = imagePath[9:]
                 else:
                     filepath = os.path.split(self.pathImageDirectory)[1]
                 print(self.outputPath + filepath + ".png")
@@ -109,7 +109,7 @@ class DatasetGenerator(Dataset):
                 print(pngdir[0])
                 imageData.save(pngpath)
                 filePng = "studio/{}/{}/{}/images/{}.png".format(
-                    self.userId, self.appId, self.programId, imagePath[7:]
+                    self.userId, self.appId, self.programId, imagePath[10:]
                 )
                 storage.upload(filePng, pngpath)
 
