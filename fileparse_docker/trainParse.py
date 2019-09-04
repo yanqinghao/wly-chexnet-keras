@@ -403,14 +403,14 @@ class StreamDemo(Stream):
             storage.upload(osslogFile, logFile)
             self.send(args.inputData1)
         except FolderException as fe:
-            print("Exception:{}".format(fe))
+            logger.error("Exception:{}".format(fe))
             with open(logFile, "w") as f:
                 json.dump({"status": "failed", "message": "EmptyFolder"}, f)
             storage.upload(osslogFile, logFile)
         except Exception as e:
             logger.error("Exception:{}".format(e))
             with open(logFile, "w") as f:
-                json.dump({"status": "failed", "message": "Exception"}, f)
+                json.dump({"status": "failed", "message": "Exception:{}".format(e)}, f)
             storage.upload(osslogFile, logFile)
 
         return None
