@@ -20,8 +20,8 @@ class StreamDemo(Stream):
         self.model = {"id": None, "model": None, "map": None}
 
     def loadImage(self, inputImage, imageSize, userId, appId, programId, fileName):
-        ossFolder = "studio/{}/{}/{}/predict/{}/{}.png".format(
-            userId, appId, programId, fileName, fileName
+        ossFolder = "studio/{}/{}/{}/predict/{}.png".format(
+            userId, appId, programId, fileName
         )
         print("load image from {}".format(ossFolder))
         storage.download(ossFolder, inputImage)
@@ -29,9 +29,7 @@ class StreamDemo(Stream):
         # testFile = os.listdir(inputImage)
         testFile = testPath
         images = image.load_img(
-            testFile,
-            grayscale=False,
-            target_size=(imageSize, imageSize),
+            testFile, grayscale=False, target_size=(imageSize, imageSize)
         )
         x = image.img_to_array(images) / 255.0
         x = np.expand_dims(x, axis=0)

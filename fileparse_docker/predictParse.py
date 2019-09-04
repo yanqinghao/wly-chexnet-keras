@@ -331,11 +331,10 @@ class StreamDemo(Stream):
             filePathDcom = "studio/{}/{}/{}/predict/{}".format(
                 userId, appId, args.inputData1["programId"], args.inputData1["fileName"]
             )
-            filePathPng = "studio/{}/{}/{}/predict/{}/{}.png".format(
+            filePathPng = "studio/{}/{}/{}/predict/{}.png".format(
                 userId,
                 appId,
                 args.inputData1["programId"],
-                args.inputData1["fileName"],
                 args.inputData1["fileName"],
             )
             localPng = "/tmp/{}.png".format(args.inputData1["fileName"])
