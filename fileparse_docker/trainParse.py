@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mat_img
 from torch.utils.data import DataLoader
 from suanpan.storage import storage
+from suanpan.log import logger
 import base64
 import json
 
@@ -402,12 +403,12 @@ class StreamDemo(Stream):
             storage.upload(osslogFile, logFile)
             self.send(args.inputData1)
         except FolderException as fe:
-            print("Exception", fe)
+            print("Exception:{}".format(fe))
             with open(logFile, "w") as f:
                 json.dump({"status": "failed", "message": "EmptyFolder"}, f)
             storage.upload(osslogFile, logFile)
         except Exception as e:
-            print("Exception", e)
+            logger.error("Exception:{}".format(e))
             with open(logFile, "w") as f:
                 json.dump({"status": "failed", "message": "Exception"}, f)
             storage.upload(osslogFile, logFile)
