@@ -18,6 +18,10 @@ import json
 from suanpan.storage import storage
 import pandas as pd
 import shutil
+import time
+import tensorflow as tf
+from tensorflow.python.client import device_lib
+from keras import backend as K
 
 
 # 定义输入
@@ -31,17 +35,46 @@ def Demo(context):
     args = context.args
     # 查看上一节点发送的 args.inputData1 数据
     print(args.inputData1)
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
+
+    print("GPU device:", tf.test.gpu_device_name())
+    print("is GPU available:", tf.test.is_gpu_available())
+    print("list all devices:", device_lib.list_local_devices())
+    print("check all devices:", K.tensorflow_backend._get_available_gpus())
 
     downloadPath = "/tmp/images"
     imagePath = "/tmp/images_sort"
+    startTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    timeStamp = time.time()
+    endTime = None
+    useTime = None
+    imageNum = None
+    trainingInfo = {
+        "startTime": startTime,
+        "endTime": endTime,
+        "useTime": useTime,
+        "imageNum": imageNum,
+    }
 
     if not os.path.exists(
         "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5"
     ):
-        storage.download(
-            "common/model/keras/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
-            "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
-        )
+        os.makedirs("/root/.keras/models")
+        if os.path.exists(
+            "/wly/model/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5"
+        ):
+            print("******************Load local model******************")
+            shutil.copyfile(
+                "/wly/model/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+                "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+            )
+        else:
+            storage.download(
+                "common/model/keras/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+                "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
+            )
     # 自定义代码
     outputDir = args.outputData1
     if os.path.exists(downloadPath):
@@ -54,20 +87,29 @@ def Demo(context):
         validationDir = os.path.join(args.inputData1, "test")
     else:
         ossPath = args.param1
+        with open("training_log.json", "w") as f:
+            json.dump({"info": "downloadmodel", "data": None}, f)
+        if os.path.split(ossPath)[0] != None:
+            storage.upload(
+                "{}/training_log.json".format(os.path.split(ossPath)[0]),
+                "training_log.json",
+            )
         trainTestSplit = args.param2 if args.param2 != None else 0.8
         print("************Split train and test : {}***********".format(trainTestSplit))
+        with open("training_log.json", "w") as f:
+            json.dump({"info": "downloadimage", "data": None}, f)
+        if os.path.split(ossPath)[0] != None:
+            storage.upload(
+                "{}/training_log.json".format(os.path.split(ossPath)[0]),
+                "training_log.json",
+            )
         storage.download(ossPath, downloadPath)
         print(os.path.split(ossPath)[0] + "/detail.json")
         storage.download(os.path.split(ossPath)[0] + "/detail.json", "detail.json")
         with open("detail.json", "r") as f:
             label_detail = json.load(f)
-        with open("traininginfo.json", "w") as f:
-            json.dump({"imageNum": len(label_detail["images"])}, f)
-        if os.path.split(ossPath)[0] != None:
-            storage.upload(
-                "{}/traininginfo.json".format(os.path.split(ossPath)[0]),
-                "traininginfo.json",
-            )
+        trainingInfo["imageNum"] = len(label_detail["images"])
+
         os.mkdir(imagePath)
         os.mkdir(os.path.join(imagePath, "train"))
         os.mkdir(os.path.join(imagePath, "test"))
@@ -75,14 +117,22 @@ def Demo(context):
         labels["name"] = []
         labels["level"] = []
         for i in label_detail["images"]:
-            labels["name"].append(i["name"])
-            labels["level"].append(i["level"])
+            if "name" in list(i.keys()) and "level" in list(i.keys()):
+                labels["name"].append(i["name"])
+                labels["level"].append(i["level"])
         labels = pd.DataFrame(labels)
         for i in list(set(labels["level"].values)):
             os.mkdir(os.path.join(imagePath, "train", i))
             os.mkdir(os.path.join(imagePath, "test", i))
         print(list(set(labels["level"].values)))
         foldercheck = []
+        with open("training_log.json", "w") as f:
+            json.dump({"info": "imageformat", "data": None}, f)
+        if os.path.split(ossPath)[0] != None:
+            storage.upload(
+                "{}/training_log.json".format(os.path.split(ossPath)[0]),
+                "training_log.json",
+            )
         for m in list(set(labels["level"].values)):
             labels_tmp = labels[labels["level"] == m]
             foldercheck.append(len(labels_tmp) * trainTestSplit > (len(labels_tmp) - 1))
@@ -116,6 +166,14 @@ def Demo(context):
     Epoch = 10
     learningRate = 0.001
     inputShape = (224, 224, 3)
+
+    with open("training_log.json", "w") as f:
+        json.dump({"info": "loadmodel", "data": None}, f)
+    if os.path.split(ossPath)[0] != None:
+        storage.upload(
+            "{}/training_log.json".format(os.path.split(ossPath)[0]),
+            "training_log.json",
+        )
 
     models = ModelFactory()
 
@@ -227,6 +285,14 @@ def Demo(context):
         csvlog,
     ]
 
+    with open("training_log.json", "w") as f:
+        json.dump({"info": "trainmodel", "data": None}, f)
+    if os.path.split(ossPath)[0] != None:
+        storage.upload(
+            "{}/training_log.json".format(os.path.split(ossPath)[0]),
+            "training_log.json",
+        )
+
     history = (
         model_train.fit_generator(
             generator=trainGenerator,
@@ -255,6 +321,27 @@ def Demo(context):
         shutil.rmtree(downloadPath)
     if os.path.exists(imagePath):
         shutil.rmtree(imagePath)
+
+    # data = history.history
+    # data["epoch"] = list(range(Epoch))
+    # with open("training_log.json", "w") as f:
+    #     json.dump({"info": "uploadmodel", "data": data}, f)
+    if os.path.split(ossPath)[0] != None:
+        storage.upload(
+            "{}/training_log.json".format(os.path.split(ossPath)[0]),
+            "training_log.json",
+        )
+    endTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    useTime = time.time() - timeStamp
+    trainingInfo["endTime"] = endTime
+    trainingInfo["useTime"] = useTime
+    with open("traininginfo.json", "w") as f:
+        json.dump(trainingInfo, f)
+    if os.path.split(ossPath)[0] != None:
+        storage.upload(
+            "{}/traininginfo.json".format(os.path.split(ossPath)[0]),
+            "traininginfo.json",
+        )
     # 将 args.outputData1 作为输出发送给下一节点
     return args.outputData1
 
