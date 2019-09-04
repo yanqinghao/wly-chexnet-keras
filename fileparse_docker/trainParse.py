@@ -365,53 +365,53 @@ class StreamDemo(Stream):
             shutil.rmtree(localDcom)
         if os.path.exists(localPng):
             shutil.rmtree(localPng)
-        try:
-            if storage.isFolder(filePathDcom):
-                storage.download(filePathDcom, localDcom)
-            else:
-                raise FolderException("No Dcom Folder")
+        # try:
+        if storage.isFolder(filePathDcom):
+            storage.download(filePathDcom, localDcom)
+        else:
+            raise FolderException("No Dcom Folder")
 
-            ds = DatasetGenerator(
-                pathImageDirectory=localDcom,
-                outputPath=localPng,
-                userId=userId,
-                appId=appId,
-                programId=programId,
-            )
+        ds = DatasetGenerator(
+            pathImageDirectory=localDcom,
+            outputPath=localPng,
+            userId=userId,
+            appId=appId,
+            programId=programId,
+        )
 
-            fileLen = len(ds.listImagePaths)
+        fileLen = len(ds.listImagePaths)
+        with open(logFile, "w") as f:
+            json.dump({"status": "running", "now": 0, "fileNum": fileLen}, f)
+
+        storage.upload(osslogFile, logFile)
+        for i, d in enumerate(ds):
             with open(logFile, "w") as f:
-                json.dump({"status": "running", "now": 0, "fileNum": fileLen}, f)
+                json.dump(
+                    {"status": "running", "now": i + 1, "fileNum": fileLen}, f
+                )
 
             storage.upload(osslogFile, logFile)
-            for i, d in enumerate(ds):
-                with open(logFile, "w") as f:
-                    json.dump(
-                        {"status": "running", "now": i + 1, "fileNum": fileLen}, f
-                    )
+            print(i + 1, "images done.")
 
-                storage.upload(osslogFile, logFile)
-                print(i + 1, "images done.")
+        if os.path.exists(localPng):
+            shutil.rmtree(localPng)
+        if os.path.exists(localDcom):
+            shutil.rmtree(localDcom)
 
-            if os.path.exists(localPng):
-                shutil.rmtree(localPng)
-            if os.path.exists(localDcom):
-                shutil.rmtree(localDcom)
-
-            with open(logFile, "w") as f:
-                json.dump({"status": "success", "now": i + 1, "fileNum": fileLen}, f)
-            storage.upload(osslogFile, logFile)
-            self.send(args.inputData1)
-        except FolderException as fe:
-            logger.error("Exception:{}".format(fe))
-            with open(logFile, "w") as f:
-                json.dump({"status": "failed", "message": "EmptyFolder"}, f)
-            storage.upload(osslogFile, logFile)
-        except Exception as e:
-            logger.error("Exception:{}".format(e))
-            with open(logFile, "w") as f:
-                json.dump({"status": "failed", "message": "Exception:{}".format(e)}, f)
-            storage.upload(osslogFile, logFile)
+        with open(logFile, "w") as f:
+            json.dump({"status": "success", "now": i + 1, "fileNum": fileLen}, f)
+        storage.upload(osslogFile, logFile)
+        self.send(args.inputData1)
+        # except FolderException as fe:
+        #     logger.error("Exception:{}".format(fe))
+        #     with open(logFile, "w") as f:
+        #         json.dump({"status": "failed", "message": "EmptyFolder"}, f)
+        #     storage.upload(osslogFile, logFile)
+        # except Exception as e:
+        #     logger.error("Exception:{}".format(e))
+        #     with open(logFile, "w") as f:
+        #         json.dump({"status": "failed", "message": "Exception:{}".format(e)}, f)
+        #     storage.upload(osslogFile, logFile)
 
         return None
 
