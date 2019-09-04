@@ -13,7 +13,7 @@ import json
 class StreamDemo(Stream):
     ARGUMENTS = [
         Int(key="param1", default=30007),
-        Int(key="param2", default=6190),
+        Int(key="param2", default=4406),
         String(key="param3", default="f8ca64d09f0411e9a1e9b3f60be454b7"),
         String(key="param4", default="c415f080a44d11e9a2ebe344cb7c1847"),
     ]
@@ -51,6 +51,10 @@ class StreamDemo(Stream):
             "9": "waiting",
         }
         # app 处于 cron 状态，就不会被运行
+        if "trainingId" in list(args.inputData1.keys()):
+            trainingId = args.inputData1["trainingId"]
+        else:
+            trainingId = None
         if args.inputData1["type"] == "start":
             ossPath = args.inputData1["data"]
             try:
@@ -85,21 +89,21 @@ class StreamDemo(Stream):
                     "8",
                     "9",
                 ]:
-                    self.send({"status": "waiting"})
+                    self.send({"status": "waiting", "trainingId": trainingId})
                     return None
                 else:
                     print("start running")
                     rRun = requests.post(url=urlRun, json=dataRun)
                     print(rRun)
                     print(rRun.content)
-                    self.send({"status": "running"})
+                    self.send({"status": "running", "trainingId": trainingId})
                     return None
             else:
                 print("First time start running")
                 rRun = requests.post(url=urlRun, json=dataRun)
                 print(rRun)
                 print(rRun.content)
-                self.send({"status": "running"})
+                self.send({"status": "running", "trainingId": trainingId})
                 return None
         elif args.inputData1["type"] == "status":
             rStatus = requests.post(url=urlStatus, json=dataStatus)
@@ -108,17 +112,22 @@ class StreamDemo(Stream):
             if json.loads(rStatus.content)["map"]:
                 if json.loads(rStatus.content)["map"]["status"] in status.keys():
                     self.send(
-                        {"status": status[json.loads(rStatus.content)["map"]["status"]]}
+                        {
+                            "status": status[
+                                json.loads(rStatus.content)["map"]["status"]
+                            ],
+                            "trainingId": trainingId,
+                        }
                     )
                     return None
                 else:
-                    self.send({"status": "unknown status"})
+                    self.send({"status": "unknown status", "trainingId": trainingId})
                     return None
             else:
-                self.send({"status": "unknown status"})
+                self.send({"status": "unknown status", "trainingId": trainingId})
                 return None
         else:
-            self.send({"status": "unknown type"})
+            self.send({"status": "unknown type", "trainingId": trainingId})
             return None
 
         return args.outputData1
