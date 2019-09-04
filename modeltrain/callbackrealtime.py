@@ -116,7 +116,7 @@ class CSVLoggerOss(Callback):
         self.csv_file.flush()
         logDict = pd.read_csv(self.filename).to_dict(orient="list")
         with open("{}.json".format(self.filename[:-4]), "w") as f:
-            json.dump(logDict, f)
+            json.dump({"info": "trainmodel", "data": logDict}, f)
         if self.osspath != None:
             storage.upload(
                 "{}/{}.json".format(self.osspath, self.filename[:-4]),
@@ -126,3 +126,6 @@ class CSVLoggerOss(Callback):
     def on_train_end(self, logs=None):
         self.csv_file.close()
         self.writer = None
+        logDict = pd.read_csv(self.filename).to_dict(orient="list")
+        with open("{}.json".format(self.filename[:-4]), "w") as f:
+            json.dump({"info": "uploadmodel", "data": logDict}, f)
