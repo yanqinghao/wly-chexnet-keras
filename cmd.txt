@@ -1,0 +1,8 @@
+docker build -t registry.cn-shanghai.aliyuncs.com/shuzhi/docker_wly:3.1 -f docker/docker_wly/Dockerfile .
+docker push registry.cn-shanghai.aliyuncs.com/shuzhi/docker_wly:3.1
+docker build -t registry.cn-shanghai.aliyuncs.com/shuzhi/docker_wly_gpu:3.1 -f docker/docker_wly_gpu/Dockerfile .
+docker push registry.cn-shanghai.aliyuncs.com/shuzhi/docker_wly_gpu:3.1
+docker build -t registry.cn-shanghai.aliyuncs.com/shuzhi/stream_wly:3.1 -f docker/stream_wly/Dockerfile .
+docker push registry.cn-shanghai.aliyuncs.com/shuzhi/stream_wly:3.1
+docker build -t registry.cn-shanghai.aliyuncs.com/shuzhi/stream_wly_gpu:3 -f docker/stream_wly_gpu/Dockerfile .
+docker push registry.cn-shanghai.aliyuncs.com/shuzhi/stream_wly_gpu:3
