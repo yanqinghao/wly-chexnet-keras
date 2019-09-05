@@ -12,7 +12,8 @@ from suanpan.stream import Stream
 from suanpan.stream.arguments import Json
 from suanpan.interfaces import HasArguments
 from suanpan.storage import storage
-from model import ModelFactory
+# from model import ModelFactory
+from keras.models import load_model
 
 
 class StreamDemo(Stream):
@@ -45,14 +46,15 @@ class StreamDemo(Stream):
             label_map = json.load(load_f)
         print("load labels : {}".format(label_map))
         self.model["map"] = label_map
-        class_names = list(label_map.keys())
-        model_factory = ModelFactory()
-        self.model["model"] = model_factory.get_model(
-            model_name=modelName,
-            class_names=class_names,
-            use_base_weights=False,
-            weights_path=output_weights_path,
-        )
+        # class_names = list(label_map.keys())
+        # model_factory = ModelFactory()
+        # self.model["model"] = model_factory.get_model(
+        #     model_name=modelName,
+        #     class_names=class_names,
+        #     use_base_weights=False,
+        #     weights_path=output_weights_path,
+        # )
+        self.model["model"] = load_model(output_weights_path)
 
     # 定义输入
     @h.input(Json(key="inputData1"))

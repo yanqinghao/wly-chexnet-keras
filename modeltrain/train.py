@@ -246,16 +246,12 @@ def Demo(context):
         model_train = multi_gpu_model(model, gpus)
         # FIXME: currently (Keras 2.1.2) checkpoint doesn't work with multi_gpu_model
         checkpoint = MultiGPUModelCheckpoint(
-            filepath=outputWeightsPath, base_model=model
+            filepath=outputWeightsPath, base_model=model, save_best_only=True, verbose=1
         )
     else:
         model_train = model
         checkpoint = ModelCheckpoint(
-            outputWeightsPath,
-            monitor="val_acc",
-            save_weights_only=True,
-            save_best_only=True,
-            verbose=1,
+            outputWeightsPath, monitor="val_acc", save_best_only=True, verbose=1
         )
 
     optimizer = Adam(lr=learningRate)
