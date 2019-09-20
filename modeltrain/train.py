@@ -44,6 +44,7 @@ def Demo(context):
     print("list all devices:", device_lib.list_local_devices())
     print("check all devices:", K.tensorflow_backend._get_available_gpus())
 
+    modelName = "DenseNet121"
     downloadPath = "/tmp/images"
     imagePath = "/tmp/images_sort"
     startTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
@@ -235,7 +236,7 @@ def Demo(context):
     )
 
     model = models.get_model(
-        model_name="DenseNet121", class_names=classNames, input_shape=inputShape
+        model_name=modelName, class_names=classNames, input_shape=inputShape
     )
     print(model.summary())
     print(len(model.layers))
