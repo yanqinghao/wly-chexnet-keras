@@ -85,7 +85,7 @@ class DatasetGenerator(Dataset):
             print("except")
             pass
         if type(imageData) == Image.Image:
-            filepath = imagePath.split(storage.delimiter)[6:]
+            filepath = imagePath.split(storage.delimiter)[8:]
             pngpath = os.path.join(self.outputPath, *filepath)
             pngpath = "{}.png".format(pngpath)
             pngdir = os.path.split(pngpath)
