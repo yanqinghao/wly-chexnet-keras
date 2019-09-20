@@ -87,6 +87,7 @@ class DatasetGenerator(Dataset):
         if type(imageData) == Image.Image:
             filepath = imagePath.split(storage.delimiter)[6:]
             pngpath = os.path.join(self.outputPath, *filepath)
+            pngpath = "{}.png".format(pngpath)
             pngdir = os.path.split(pngpath)
             if not os.path.exists(pngdir[0]):
                 os.makedirs(pngdir[0])
@@ -317,18 +318,12 @@ def dicomParse(context):
 
     args = context.args
 
-    try:
-        ds = DatasetGenerator(
-            pathImageDirectory=args.inputData, outputPath=args.outputData
-        )
+    ds = DatasetGenerator(
+        pathImageDirectory=args.inputData, outputPath=args.outputData
+    )
 
-        for i, d in enumerate(ds):
-            logger.info("{} images done.".format(i + 1))
-
-    except FolderException as fe:
-        logger.error("Exception:{}".format(fe))
-    except Exception as e:
-        logger.error("Exception:{}".format(e))
+    for i, d in enumerate(ds):
+        logger.info("{} images done.".format(i + 1))
 
     return args.outputData
 
