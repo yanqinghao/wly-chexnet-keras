@@ -30,7 +30,7 @@ COPY --from=builder /build /wly
 
 RUN pip install -r requirements.txt
 
-RUN pip install tensorflow
+RUN pip install tensorflow==1.13.1
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
