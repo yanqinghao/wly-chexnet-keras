@@ -12,6 +12,7 @@ from suanpan.stream import Stream
 from suanpan.stream.arguments import Json
 from suanpan.interfaces import HasArguments
 from suanpan.storage import storage
+
 # from model import ModelFactory
 from keras.models import load_model
 
@@ -98,7 +99,13 @@ class StreamDemo(Stream):
                     result = class_names[np.argsort(result[0])[::-1][0]]
                 print("predict result : {}".format(result))
 
-                self.send({"status": "success", "result": result})
+                self.send(
+                    {
+                        "status": "success",
+                        "result": {"rate": result},
+                        "programId": programId,
+                    }
+                )
 
                 with open("recommendation.json", "w") as f:
                     json.dump({"id": self.model["id"]}, f)
@@ -111,9 +118,9 @@ class StreamDemo(Stream):
                 if os.path.exists(inputModel):
                     shutil.rmtree(inputModel)
             except:
-                self.send({"status": "failed", "result": None})
+                self.send({"status": "failed", "result": None, "programId": programId})
         else:
-            self.send({"status": "wrong type", "result": None})
+            self.send({"status": "wrong type", "result": None, "programId": programId})
 
         return None
 
