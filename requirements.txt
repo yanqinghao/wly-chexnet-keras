@@ -1,4 +1,4 @@
-suanpan==0.9.79
+suanpan==0.10.0
 appdirs==1.4.3
 astroid==2.2.5
 attrs==19.1.0
