@@ -34,11 +34,11 @@ class StreamDemo(Stream):
         idx = random.randint(0, len(label_detail["images"]) - 1)
         outputData = args.inputData1
         if "checkType" in label_detail["images"][idx].keys():
-            outputData.update({"checkType": label_detail["images"][idx]["checkType"]})
-        outputData.update(
+            outputData["result"].update({"checkType": label_detail["images"][idx]["checkType"]})
+        outputData["result"].update(
             {"imageSharpnessRate": label_detail["images"][idx]["imageSharpnessRate"]}
         )
-        outputData.update(
+        outputData["result"].update(
             {
                 "deviceCapabilityRate": label_detail["images"][idx][
                     "deviceCapabilityRate"
