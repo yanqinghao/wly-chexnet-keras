@@ -12,10 +12,11 @@ import json
 
 class StreamDemo(Stream):
     ARGUMENTS = [
-        Int(key="param1", default=30007),
+        Int(key="param1"),
         Int(key="param2", default=4406),
         String(key="param3", default="f8ca64d09f0411e9a1e9b3f60be454b7"),
         String(key="param4", default="c415f080a44d11e9a2ebe344cb7c1847"),
+        String(key="param5", default="http"),
     ]
     # 定义输入
     @h.input(Json(key="inputData1", required=True))
@@ -32,11 +33,17 @@ class StreamDemo(Stream):
         host = envparam[envparam.index("--stream-host") + 1]
         port = args.param1
         templateId = args.param2
+        header = args.param5
 
-        urlStatus = "http://{}:{}/app/status".format(host, port)
+        if port:
+            urlStatus = "{}://{}:{}/app/status".format(header, host, port)
+        else:
+            urlStatus = "{}://{}/app/status".format(header, host)
         dataStatus = {"id": templateId}
-
-        urlRun = "http://{}:{}/app/run".format(host, port)
+        if port:
+            urlRun = "{}://{}:{}/app/run".format(header, host, port)
+        else:
+            urlStatus = "{}://{}/app/run".format(header, host)
 
         status = {
             "0": "none",
