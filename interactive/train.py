@@ -43,7 +43,7 @@ class StreamDemo(Stream):
         if port:
             urlRun = "{}://{}:{}/app/run".format(header, host, port)
         else:
-            urlStatus = "{}://{}/app/run".format(header, host)
+            urlRun = "{}://{}/app/run".format(header, host)
 
         status = {
             "0": "none",
