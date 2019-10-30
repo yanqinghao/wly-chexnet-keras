@@ -33,13 +33,18 @@ class StreamDemo(Stream):
 
         idx = random.randint(0, len(label_detail["images"]) - 1)
         outputData = args.inputData1
-        outputData["checkType"] = label_detail["images"][idx]["checkType"]
-        outputData["imageSharpnessRate"] = label_detail["images"][idx][
-            "imageSharpnessRate"
-        ]
-        outputData["deviceCapabilityRate"] = label_detail["images"][idx][
-            "deviceCapabilityRate"
-        ]
+        if "checkType" in label_detail["images"][idx].keys():
+            outputData.update({"checkType": label_detail["images"][idx]["checkType"]})
+        outputData.update(
+            {"imageSharpnessRate": label_detail["images"][idx]["imageSharpnessRate"]}
+        )
+        outputData.update(
+            {
+                "deviceCapabilityRate": label_detail["images"][idx][
+                    "deviceCapabilityRate"
+                ]
+            }
+        )
 
         self.send(outputData)
 
