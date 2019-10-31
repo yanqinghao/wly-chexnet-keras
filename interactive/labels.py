@@ -25,28 +25,36 @@ class StreamDemo(Stream):
         userId = envparam[envparam.index("--stream-user-id") + 1]
         appId = envparam[envparam.index("--stream-app-id") + 1]
         programId = args.inputData1["programId"]
+        if args.inputData1["status"] == "success":
+            ossPath = "studio/{}/{}/{}/detail.json".format(userId, appId, programId)
+            storage.download(ossPath, "detail.json")
+            with open("detail.json", "r") as f:
+                label_detail = json.load(f)
 
-        ossPath = "studio/{}/{}/{}/detail.json".format(userId, appId, programId)
-        storage.download(ossPath, "detail.json")
-        with open("detail.json", "r") as f:
-            label_detail = json.load(f)
+            idx = random.randint(0, len(label_detail["images"]) - 1)
+            outputData = args.inputData1
+            if "checkType" in label_detail["images"][idx].keys():
+                outputData["result"].update(
+                    {"checkType": label_detail["images"][idx]["checkType"]}
+                )
+            outputData["result"].update(
+                {
+                    "imageSharpnessRate": label_detail["images"][idx][
+                        "imageSharpnessRate"
+                    ]
+                }
+            )
+            outputData["result"].update(
+                {
+                    "deviceCapabilityRate": label_detail["images"][idx][
+                        "deviceCapabilityRate"
+                    ]
+                }
+            )
 
-        idx = random.randint(0, len(label_detail["images"]) - 1)
-        outputData = args.inputData1
-        if "checkType" in label_detail["images"][idx].keys():
-            outputData["result"].update({"checkType": label_detail["images"][idx]["checkType"]})
-        outputData["result"].update(
-            {"imageSharpnessRate": label_detail["images"][idx]["imageSharpnessRate"]}
-        )
-        outputData["result"].update(
-            {
-                "deviceCapabilityRate": label_detail["images"][idx][
-                    "deviceCapabilityRate"
-                ]
-            }
-        )
-
-        self.send(outputData)
+            self.send(outputData)
+        else:
+            self.send(args.inputData1)
 
         return None
 
