@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "fileparse_docker.dicomParse.dicomParse",
+                "--storage-type",
+                "local",
+                "--inputData",
+                "/home/yanqinghao/code/wly-chexnet-keras/dataset/input",
+                "--outputData",
+                "/home/yanqinghao/code/wly-chexnet-keras/dataset/output",
+            ],
+            "env": {
+                "SP_APP_TYPE": "docker",
+                "SP_SCREENSHOTS_STORAGE_KEY": "/home/yanqinghao/temp/screenshots",
+                "SP_USER_ID": "",
+                "SP_APP_ID": "",
+                "SP_NODE_ID": "",
+                "SP_HOST": "",
+                "SP_API_HOST": "",
+                "SP_ACCESS_KEY": "",
+                "SP_ACCESS_SECRET": ""
+            }
+        }
+    ]
+}

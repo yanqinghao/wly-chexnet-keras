@@ -1,12 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
-from suanpan.docker import DockerComponent as dc
-from suanpan.docker.arguments import Folder
-from suanpan.stream import Handler as h
-from suanpan.stream import Stream
-from suanpan.stream.arguments import String, Json
-from suanpan.interfaces import HasArguments
+from suanpan.app import app
+from suanpan.app.arguments import Folder
 import os
 import pdb
 import sys
@@ -312,8 +308,8 @@ class FolderException(Exception):
     pass
 
 
-@dc.input(Folder(key="inputData", required=True))
-@dc.output(Folder(key="outputData", required=True))
+@app.input(Folder(key="inputData"))
+@app.output(Folder(key="outputData"))
 def dicomParse(context):
 
     args = context.args
