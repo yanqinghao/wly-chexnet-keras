@@ -54,7 +54,7 @@ class DatasetGenerator(Dataset):
         else:
             logger.info("prepare file")
             self.listImagePaths = [self.pathImageDirectory]
-        logger.info(len(self.listImagePaths), " images to convert.")
+        logger.info("{} images to convert.".format(len(self.listImagePaths)))
         self.listImageLabels = []
         self.transform = transform
         self.outputPath = outputPath
@@ -63,7 +63,7 @@ class DatasetGenerator(Dataset):
         self.programId = programId
 
     def __getitem__(self, index):
-        logger.info("start" + str(index))
+        logger.info("start {}".format(index))
         imagePath = self.listImagePaths[index]
         filePng = "studio/{}/share/{}/uploads/{}/images/{}.png".format(
             self.userId, self.appId, self.programId, imagePath[7:])
@@ -81,7 +81,7 @@ class DatasetGenerator(Dataset):
                 logger.info("except")
                 pass
             if type(imageData) == Image.Image:
-                logger.info("save image ", index)
+                logger.info("save image {}".format(index))
                 if os.path.isdir(self.pathImageDirectory):
                     logger.info(imagePath[9:])
                     filepath = imagePath[9:]
@@ -362,7 +362,7 @@ def trainParse(context):
                 json.dump({"status": "running", "now": i + 1, "fileNum": fileLen}, f)
 
             storage.upload(osslogFile, logFile)
-            logger.info(i + 1, "images done.")
+            logger.info("{} images done.".format(i + 1))
 
         if os.path.exists(localPng):
             shutil.rmtree(localPng)

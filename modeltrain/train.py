@@ -36,10 +36,10 @@ def Demo(context):
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
 
-    logger.info("GPU device:", tf.test.gpu_device_name())
-    logger.info("is GPU available:", tf.test.is_gpu_available())
-    logger.info("list all devices:", device_lib.list_local_devices())
-    logger.info("check all devices:", K.tensorflow_backend._get_available_gpus())
+    logger.info("GPU device: {}".format(tf.test.gpu_device_name()))
+    logger.info("is GPU available: {}".format(tf.test.is_gpu_available()))
+    logger.info("list all devices: {}".format(device_lib.list_local_devices()))
+    logger.info("check all devices: {}".format(K.tensorflow_backend._get_available_gpus()))
 
     modelName = "DenseNet121"
     downloadPath = "/tmp/images"

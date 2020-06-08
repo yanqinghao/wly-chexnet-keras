@@ -49,14 +49,14 @@ class DatasetGenerator(Dataset):
         else:
             logger.info("prepare file")
             self.listImagePaths = [self.pathImageDirectory]
-        logger.info(len(self.listImagePaths), " images to convert.")
+        logger.info("{} images to convert.".format(len(self.listImagePaths)))
         self.listImageLabels = []
         self.transform = transform
         self.outputPath = outputPath
 
     def __getitem__(self, index):
         # errorLabel = torch.FloatTensor(np.zeros([100]))
-        logger.info("start" + str(index))
+        logger.info("start {}".format(index))
         imagePath = self.listImagePaths[index]
         sucess = False
         try:
@@ -71,7 +71,7 @@ class DatasetGenerator(Dataset):
             logger.info("except")
             pass
         if type(imageData) == Image.Image:
-            logger.info("save image ", index)
+            logger.info("save image {}".format(index))
             if os.path.isdir(self.pathImageDirectory):
                 logger.info(imagePath[9:])
                 filepath = imagePath[9:]
@@ -319,7 +319,7 @@ def predictParse(context):
         logger.info(filePathDcom)
         ds = DatasetGenerator(localDcom, localPath)
         for i, d in enumerate(ds):
-            logger.info(i + 1, "images done.")
+            logger.info("{} images done.".format(i + 1))
         os.remove(localDcom)
         storage.upload(filePathPng, localPng)
         os.remove(localPng)
