@@ -109,8 +109,6 @@ def trainNew(context):
     else:
         app.send({"status": "unknown type", "trainingId": trainingId})
 
-    return args.outputData1
-
 
 if __name__ == "__main__":
     suanpan.run(app)
