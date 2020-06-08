@@ -12,7 +12,7 @@ from suanpan.stream.arguments import Json
 
 @app.input(Json(key="inputData1"))
 @app.output(Json(key="outputData1"))
-def labels(self, context):
+def labels(context):
     args = context.args
     programId = args.inputData1["programId"]
     if args.inputData1["status"] == "success":
