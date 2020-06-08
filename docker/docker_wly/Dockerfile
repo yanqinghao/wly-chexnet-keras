@@ -40,7 +40,7 @@ RUN pip install --upgrade pip
 
 COPY --from=builder /build /wly
 
-RUN pip install -r REQUIREMENTS_FILE
+RUN pip install -r ${REQUIREMENTS_FILE}
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
