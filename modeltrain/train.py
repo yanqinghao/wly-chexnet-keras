@@ -24,12 +24,13 @@ from callbackrealtime import CSVLoggerOss
 from model import ModelFactory
 
 
-@app.input(Folder(key="inputData1", required=True))
+@app.input(Folder(key="inputData1"))
 @app.param(String(key="param1"))
 @app.param(Float(key="param2"))
-@app.output(Folder(key="outputData1", required=True))
+@app.output(Folder(key="outputData1"))
 def Demo(context):
     args = context.args
+    args.update({"outputData1": "/densenet121_model"})
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -70,6 +71,8 @@ def Demo(context):
                 "/root/.keras/models/densenet121_weights_tf_dim_ordering_tf_kernels_notop.h5",
             )
     outputDir = args.outputData1
+    if not os.path.exists(outputDir):
+        os.mkdir(outputDir)
     if os.path.exists(downloadPath):
         shutil.rmtree(downloadPath)
     if os.path.exists(imagePath):
