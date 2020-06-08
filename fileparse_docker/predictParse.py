@@ -1,31 +1,19 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
-from suanpan.docker import DockerComponent as dc
-from suanpan.docker.arguments import Folder
-from suanpan.stream import Handler as h
-from suanpan.stream import Stream
-from suanpan.stream.arguments import String, Json
-from suanpan.interfaces import HasArguments
 import os
-import pdb
-import sys
-import glob
 import time
-import shutil
-import logging
 import pydicom as dicom
 import numpy as np
-import cv2
 import SimpleITK as sitk
-from multiprocessing.dummy import Pool
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
 from numba import jit
-import matplotlib.pyplot as plt
-import matplotlib.image as mat_img
-from torch.utils.data import DataLoader
+from PIL import Image
+from torch.utils.data import Dataset
+import suanpan
+from suanpan.app import app
+from suanpan.log import logger
+from suanpan import g
+from suanpan.stream.arguments import Json
 from suanpan.storage import storage
 
 
@@ -47,7 +35,6 @@ class DatasetGenerator(Dataset):
     pathDatasetFile：数据集文件
     transform：转换
     """
-
     def __init__(
         self,
         pathImageDirectory=None,
@@ -57,19 +44,19 @@ class DatasetGenerator(Dataset):
     ):
         self.pathImageDirectory = pathImageDirectory
         if os.path.isdir(self.pathImageDirectory):
-            print("************prepare dir list**************")
+            logger.info("prepare dir list")
             self.listImagePaths = get_all_files(self.pathImageDirectory)
         else:
-            print("**************prepare file****************")
+            logger.info("prepare file")
             self.listImagePaths = [self.pathImageDirectory]
-        print(len(self.listImagePaths), " images to convert.")
+        logger.info(len(self.listImagePaths), " images to convert.")
         self.listImageLabels = []
         self.transform = transform
         self.outputPath = outputPath
 
     def __getitem__(self, index):
         # errorLabel = torch.FloatTensor(np.zeros([100]))
-        print("********start********" + str(index))
+        logger.info("start" + str(index))
         imagePath = self.listImagePaths[index]
         sucess = False
         try:
@@ -78,24 +65,24 @@ class DatasetGenerator(Dataset):
             elif imagePath.find("dcm") != -1:
                 sucess, imageData = self.__read_dicom(imagePath)
             else:
-                print("no name")
+                logger.info("no name")
                 sucess, imageData = self.__read_dicom(imagePath)
         except:
-            print("except")
+            logger.info("except")
             pass
         if type(imageData) == Image.Image:
-            print("save image ", index)
+            logger.info("save image ", index)
             if os.path.isdir(self.pathImageDirectory):
-                print(imagePath[9:])
+                logger.info(imagePath[9:])
                 filepath = imagePath[9:]
             else:
                 filepath = os.path.split(self.pathImageDirectory)[1]
-            print(self.outputPath + filepath + ".png")
+            logger.info(self.outputPath + filepath + ".png")
             pngpath = self.outputPath + filepath + ".png"
             pngdir = os.path.split(pngpath)
             if not os.path.exists(pngdir[0]):
                 os.makedirs(pngdir[0])
-            print(pngdir[0])
+            logger.info(pngdir[0])
             imageData.save(pngpath)
 
         return imageData, []
@@ -147,7 +134,7 @@ class DatasetGenerator(Dataset):
         try:
             dcmFile = dicom.read_file(imagePath)
         except Exception as e:
-            print("file read fail")
+            logger.info("file read fail")
             # log.error('__read_dicom?读取文件错误')
             return False, "读取文件格式错误"
 
@@ -171,7 +158,7 @@ class DatasetGenerator(Dataset):
 
         # 最大最小值 , 如果缺少窗宽和窗位　直接赋值
         minVal = 0
-        maxVal = 2 ** int(dcmFile.BitsStored)
+        maxVal = 2**int(dcmFile.BitsStored)
         self.windowCenter = int(maxVal * 0.5)
         self.windowWidth = maxVal - 1
         self.bitsStored = dcmFile.BitsStored
@@ -233,7 +220,6 @@ class DatasetGenerator(Dataset):
         # 将darray类型转化为PILImage类型
         imageData = Image.fromarray(imageData)
         end_time = time.time()
-        # print("time cost is:",end_time - start_time)
         return True, imageData
 
     @jit
@@ -242,7 +228,7 @@ class DatasetGenerator(Dataset):
         w_right = int(self.windowCenter + self.windowWidth * 0.5)
         windowWidth = w_right - w_left
         # len = 2 ** self.bitsStored
-        len = 2 ** self.bitsAllocated
+        len = 2**self.bitsAllocated
         self.a_min = 0
         self.a_max = len - 1
         self.lut = np.zeros((len), np.uint8)
@@ -267,9 +253,8 @@ class DatasetGenerator(Dataset):
     @jit
     def __process_data(self, data, invert):
         # normalization
-        des_data_old = np.zeros(data.shape[1] * data.shape[0], np.uint8).reshape(
-            [data.shape[0], data.shape[1]]
-        )
+        des_data_old = np.zeros(data.shape[1] * data.shape[0],
+                                np.uint8).reshape([data.shape[0], data.shape[1]])
 
         lut = self.__generate_lut(invert)
 
@@ -313,46 +298,36 @@ class DatasetGenerator(Dataset):
         return img_dict
 
 
-class StreamDemo(Stream):
-    # 定义输入
-    @h.input(Json(key="inputData1", required=True))
-    # 定义输出
-    @h.output(Json(key="outputData1"))
-    def call(self, context):
-        # 从 Context 中获取相关数据
-        args = context.args
-        # 查看上一节点发送的 args.inputData1 数据
-        print(args.inputData1)
-        envparam = HasArguments.getArgListFromEnv()
-        userId = envparam[envparam.index("--stream-user-id") + 1]
-        appId = envparam[envparam.index("--stream-app-id") + 1]
+@app.input(Json(key="inputData1"))
+@app.output(Json(key="outputData1"))
+def predictParse(context):
+    args = context.args
 
-        if args.inputData1["type"] == "start":
-            filePathDcom = "studio/{}/{}/{}/predict/{}".format(
-                userId, appId, args.inputData1["programId"], args.inputData1["fileName"]
-            )
-            filePathPng = "studio/{}/{}/{}/predict/{}.png".format(
-                userId,
-                appId,
-                args.inputData1["programId"],
-                args.inputData1["fileName"],
-            )
-            localPng = "/tmp/{}.png".format(args.inputData1["fileName"])
-            localDcom = "/tmp/{}".format(args.inputData1["fileName"])
-            localPath = "/tmp/"
-            storage.download(filePathDcom, localDcom)
-            print(filePathDcom)
-            ds = DatasetGenerator(localDcom, localPath)
-            for i, d in enumerate(ds):
-                print(i + 1, "images done.")
-            os.remove(localDcom)
-            storage.upload(filePathPng, localPng)
-            os.remove(localPng)
+    if args.inputData1["type"] == "start":
+        filePathDcom = "studio/{}/share/{}/uploads/{}/predict/{}".format(
+            g.userId, g.appId, args.inputData1["programId"], args.inputData1["fileName"])
+        filePathPng = "studio/{}/share/{}/uploads/{}/predict/{}.png".format(
+            g.userId,
+            g.appId,
+            args.inputData1["programId"],
+            args.inputData1["fileName"],
+        )
+        localPng = "/tmp/{}.png".format(args.inputData1["fileName"])
+        localDcom = "/tmp/{}".format(args.inputData1["fileName"])
+        localPath = "/tmp/"
+        storage.download(filePathDcom, localDcom)
+        logger.info(filePathDcom)
+        ds = DatasetGenerator(localDcom, localPath)
+        for i, d in enumerate(ds):
+            logger.info(i + 1, "images done.")
+        os.remove(localDcom)
+        storage.upload(filePathPng, localPng)
+        os.remove(localPng)
 
-        elif args.inputData1["type"] == "status":
-            pass
-        return args.inputData1
+    elif args.inputData1["type"] == "status":
+        pass
+    return args.inputData1
 
 
 if __name__ == "__main__":
-    StreamDemo().start()
+    suanpan.run(app)
