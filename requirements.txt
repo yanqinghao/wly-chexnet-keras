@@ -1,15 +1,12 @@
-suanpan==0.10.0
 appdirs==1.4.3
 astroid==2.2.5
 attrs==19.1.0
-black==19.3b0
 certifi==2019.6.16
 chardet==3.0.4
 Click==7.0
 colorama==0.4.1
 cycler==0.10.0
 decorator==4.4.0
-Flask==1.0.3
 func-timeout==4.3.0
 idna==2.8
 imageio==2.5.0
@@ -50,5 +47,4 @@ urllib3==1.25.3
 Werkzeug==0.15.4
 wrapt==1.11.2
 keras
-# # tensorflow-gpu
-# tensorflow
+tensorflow==1.13.1
