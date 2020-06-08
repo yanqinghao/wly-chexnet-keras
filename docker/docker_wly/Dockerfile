@@ -26,8 +26,6 @@ ARG NAME_SPACE
 
 ARG DOCKER_BASE
 
-ARG REQUIREMENTS_FILE
-
 FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/${DOCKER_BASE}:${PYTHON_VERSION}
 
 WORKDIR /wly
@@ -39,6 +37,8 @@ RUN pip config set global.index-url ${PYPI_MIRROR}
 RUN pip install --upgrade pip
 
 COPY --from=builder /build /wly
+
+ARG REQUIREMENTS_FILE
 
 RUN pip install -r ${REQUIREMENTS_FILE}
 
