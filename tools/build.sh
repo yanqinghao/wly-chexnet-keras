@@ -8,7 +8,7 @@ TAG="3.7"
 BUILDNAMES=("docker_wly" "docker_wly_gpu")
 REQUIREMENTS=("requirements.txt" "requirements_gpu.txt")
 NAMESPACE="shuzhi-amd64"
-for ((i = 0; i <= ${#DOCKERBASES[@]}; i++)); do
+for ((i = 0; i < ${#DOCKERBASES[@]}; i++)); do
     docker build --build-arg NAME_SPACE=${NAMESPACE} --build-arg DOCKER_BASE=${DOCKERBASES[i]} \
         --build-arg PYTHON_VERSION=${TAG} --build-arg REQUIREMENTS_FILE=${REQUIREMENTS[i]} -t \
         registry-vpc.cn-shanghai.aliyuncs.com/${NAMESPACE}/${BUILDNAMES[i]}:${VERSION} \
