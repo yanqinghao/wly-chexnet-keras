@@ -1,6 +1,10 @@
-ARG PYTHON_VERSION=3.7
+ARG PYTHON_VERSION
 
-FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/docker_base:${PYTHON_VERSION} as builder
+ARG NAME_SPACE
+
+ARG DOCKER_BASE
+
+FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/${DOCKER_BASE}:${PYTHON_VERSION} as builder
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
@@ -16,7 +20,15 @@ COPY . /build
 
 RUN bash tools/compress.sh
 
-FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/docker_base:${PYTHON_VERSION}
+ARG PYTHON_VERSION
+
+ARG NAME_SPACE
+
+ARG DOCKER_BASE
+
+ARG REQUIREMENTS_FILE
+
+FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/${DOCKER_BASE}:${PYTHON_VERSION}
 
 WORKDIR /wly
 
@@ -28,9 +40,7 @@ RUN pip install --upgrade pip
 
 COPY --from=builder /build /wly
 
-RUN pip install -r requirements.txt
-
-RUN pip install tensorflow==1.13.1
+RUN pip install -r REQUIREMENTS_FILE
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
